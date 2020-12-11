@@ -1,0 +1,24 @@
+# file opened: Toboggan_Trajectory_p2.asm
+ 1    0000              ; https://adventofcode.com/2020/day/3 (part 2)
+ 2    0000                  OPT listoff
+# listing file suspended...
+# file closed: Toboggan_Trajectory_p2.asm
+
+Value    Label
+------ - -----------------------------------------------------------
+0x0000   inputFile
+0x2860   inputEnd
+0x0041   trees11
+0x00ED   trees31
+0x003B   trees51
+0x003D   trees71
+0x0026   trees12
+0x000D X posx11
+0x0008 X posx31
+0x0003 X posx51
+0x001D X posx71
+0x0007 X posx12
+0x001F   width
+0x0143   height
+0x2860   inPtr
+0x000A   inByte

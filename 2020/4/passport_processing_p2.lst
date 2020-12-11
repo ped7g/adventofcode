@@ -1,0 +1,22 @@
+# file opened: passport_processing_p2.asm
+  1   0000              ; https://adventofcode.com/2020/day/4 (part 2)
+  2   0000              ;(I forgot to preserve part 1 ... well, let's leave it as exercise to the reader)
+  3   0000                  OPT listoff
+# listing file suspended...
+# file closed: passport_processing_p2.asm
+
+Value    Label
+------ - -----------------------------------------------------------
+0x0005   charIndex
+0x494D X checkNumberPtr
+0xFFFFFFFF X checkNumberVal
+0x00FF   DETECTED_ALL
+0x007F X DETECTED_ALL_NO_CID
+0x0000   DETECTED_NONE
+0x0000 X detectedFields
+0x687A6C X eyeColor
+0x0008   fieldIndex
+0x4950   inPtr
+0x4950   inputEnd
+0x0000   inputFile
+0x009C   valid
