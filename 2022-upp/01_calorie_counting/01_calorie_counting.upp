@@ -1,0 +1,10 @@
+uses
+	Core;
+
+file
+	sample.txt,
+	01_calorie_counting.cpp;
+
+mainconfig
+	"" = "";
+

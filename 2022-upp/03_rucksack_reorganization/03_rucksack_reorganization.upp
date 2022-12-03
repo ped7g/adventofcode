@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	03_rucksack_reorganization.upp,
+	03_rucksack_reorganization.cpp,
+	sample.txt,
+	input.txt;
+
+mainconfig
+	"" = "";
+

@@ -1,0 +1,10 @@
+uses
+	Core;
+
+file
+	sample.txt,
+	02_rock_paper_scissors.cpp;
+
+mainconfig
+	"" = "";
+
