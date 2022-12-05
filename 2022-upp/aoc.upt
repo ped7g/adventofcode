@@ -31,11 +31,11 @@ public:
 
 	void init() { Cout() << "part1"; }
 
-	void finish() { Cout() << "part1: " << 0 << EOL; }
-
 	bool line(const String & line) {
 		return false;							// not finished yet, try next line
 	}
+
+	void finish() { Cout() << "part1: " << 0 << EOL; }
 };
 
 class Part2 {
@@ -44,11 +44,11 @@ public:
 
 	void init() { Cout() << "part2"; }
 
-	void finish() { Cout() << "part2: " << 0 << EOL; }
-
 	bool line(const String & line) {
 		return false;							// not finished yet, try next line
 	}
+
+	void finish() { Cout() << "part2: " << 0 << EOL; }
 };
 
 CONSOLE_APP_MAIN
