@@ -49,7 +49,7 @@ public:
 				if (crate != ' ') stacks[i].Cat(crate);
 			}
 		}
-		return true;							// report stacks parsing finished
+		return false;							// false to skip empty line in main loop
 	}
 };
 
@@ -65,7 +65,6 @@ public:
 		// read stacks from input until the commands are given
 		if (!s_.line(line)) return false;
 		// follow the commands
-		if (line.IsEmpty()) return false;		// empty line ahead of commands
 		int count, fromI, toI;
 		if (3 != sscanf(line, "move %d from %d to %d", &count, &fromI, &toI)) return true;	// bad input
 		// process command
@@ -95,7 +94,6 @@ public:
 		// read stacks from input until the commands are given
 		if (!s_.line(line)) return false;
 		// follow the commands
-		if (line.IsEmpty()) return false;		// empty line ahead of commands
 		int count, fromI, toI;
 		if (3 != sscanf(line, "move %d from %d to %d", &count, &fromI, &toI)) return true;	// bad input
 		// process command
