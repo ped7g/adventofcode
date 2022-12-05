@@ -22,7 +22,7 @@ void lines_loop(T task, const String & filename) {
 	task.finish();
 }
 
-class Part1 {
+class Part1 {	// expected answer: 2, 513 (sample text, input)
 
 	long fully_contained { 0 };
 
@@ -35,12 +35,13 @@ public:
 	bool line(const String & line) {
 		long r1b,r1e,r2b,r2e;
 		if (4 != sscanf(~line, "%ld-%ld,%ld-%ld", &r1b, &r1e, &r2b, &r2e)) return true; // invalid format, terminate
-		if ((r2b >= r1b && r2e <= r1e) || (r1b >= r2b && r1e <= r2e)) ++fully_contained;
+		// if ((r2b >= r1b && r2e <= r1e) || (r1b >= r2b && r1e <= r2e)) ++fully_contained;
+		if ((r2b - r1b) * (r2e - r1e) <= 0) ++fully_contained;
 		return false;							// not finished yet, try next line
 	}
 };
 
-class Part2 {
+class Part2 {	// expected answer: 4, 878
 
 	long overlap { 0 };
 
