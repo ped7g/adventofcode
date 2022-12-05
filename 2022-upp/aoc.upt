@@ -63,10 +63,10 @@ CONSOLE_APP_MAIN
 uses Core;
 
 file
-	<:PACKAGE:>.upp,
 	<:PACKAGE:>.cpp,
 	sample.txt,
-	input.txt;
+	input.txt,
+	<:PACKAGE:>.upp;
 
 mainconfig
 	"" = "";
