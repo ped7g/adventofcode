@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	05_supply_stacks.cpp,
+	sample.txt,
+	input.txt,
+	05_supply_stacks.upp;
+
+mainconfig
+	"" = "";
+
