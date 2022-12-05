@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	04_camp_cleanup.upp,
+	04_camp_cleanup.cpp,
+	sample.txt,
+	input.txt;
+
+mainconfig
+	"" = "";
+
