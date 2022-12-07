@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	06_tuning_trouble.cpp,
+	sample.txt,
+	input.txt,
+	06_tuning_trouble.upp;
+
+mainconfig
+	"" = "";
+
