@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	07_no_space_left_on_device.cpp,
+	sample.txt,
+	input.txt,
+	07_no_space_left_on_device.upp;
+
+mainconfig
+	"" = "";
+
