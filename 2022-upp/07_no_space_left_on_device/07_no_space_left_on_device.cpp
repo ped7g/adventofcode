@@ -68,7 +68,7 @@ public:
 			} else if (!words[1].Compare("ls")) {
 				// protect against duplicate ls (not part of AoC inputs)
 				ignore_listed_files_ = (0 <= listed_.Find(parse_dir_));
-				listed_.Add(parse_dir_);
+				if (!ignore_listed_files_) listed_.Add(parse_dir_);
 			}
 		} else if (!words[0].Compare("dir")) {	// listing of sub-directory
 			// nothing to do, files are stored with full paths as flat vector, not using FS tree
