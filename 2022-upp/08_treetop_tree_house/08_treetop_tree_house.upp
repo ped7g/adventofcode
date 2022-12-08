@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	08_treetop_tree_house.cpp,
+	sample.txt,
+	input.txt,
+	08_treetop_tree_house.upp;
+
+mainconfig
+	"" = "";
+
