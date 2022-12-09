@@ -53,10 +53,9 @@ public:
 
 CONSOLE_APP_MAIN
 {
-	const Vector<String>& cmdline = CommandLine();
-	for(int i = 0; i < cmdline.GetCount(); i++) {
-		lines_loop(Part1(), cmdline[i]);
-		lines_loop(Part2(), cmdline[i]);
+	for (const String & arg : CommandLine()) {
+		lines_loop(Part1(), arg);
+		lines_loop(Part2(), arg);
 	}
 }
 @@<:PACKAGE:>.upp
