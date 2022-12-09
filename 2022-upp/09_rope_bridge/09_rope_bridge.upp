@@ -1,0 +1,13 @@
+uses
+	Core;
+
+file
+	09_rope_bridge.cpp,
+	sample.txt,
+	sample2.txt,
+	input.txt,
+	09_rope_bridge.upp;
+
+mainconfig
+	"" = "";
+
