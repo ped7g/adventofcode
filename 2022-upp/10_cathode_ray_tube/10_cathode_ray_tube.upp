@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	10_cathode_ray_tube.cpp,
+	sample.txt,
+	input.txt,
+	10_cathode_ray_tube.upp;
+
+mainconfig
+	"" = "";
+
