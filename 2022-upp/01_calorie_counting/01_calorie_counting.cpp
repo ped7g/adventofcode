@@ -3,7 +3,7 @@
 using namespace Upp;
 
 void part1(const String & filename) {
-	FileIn in(GetDataFile(filename));
+	FileIn in(FileExists(filename) ? filename : GetDataFile(filename)); // 2nd try exe-dir
 	if (!in) return;
 	Cout() << "input filename: " << filename << EOL;
 	int maxcal = 0, elfcal = 0;
@@ -21,7 +21,7 @@ void part1(const String & filename) {
 }
 
 void part2(const String & filename) {
-	FileIn in(GetDataFile(filename));
+	FileIn in(FileExists(filename) ? filename : GetDataFile(filename)); // 2nd try exe-dir
 	if (!in) return;
 	Cout() << "input filename: " << filename << EOL;
 	int maxcals[3] { 0, 0, 0 }, elfcal = 0;

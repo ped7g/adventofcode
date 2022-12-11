@@ -14,7 +14,7 @@ concept TaskProcessingLines = requires(T task, const String & line) {
 template <typename T>
 requires TaskProcessingLines<T>
 void lines_loop(T task, const String & filename) {
-	FileIn in(GetDataFile(filename));
+	FileIn in(FileExists(filename) ? filename : GetDataFile(filename)); // 2nd try exe-dir
 	if (!in) return;
 	task.init();
 	Cout() << " input filename: " << filename << EOL;
