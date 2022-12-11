@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	11_monkey_in_middle.cpp,
+	sample.txt,
+	input.txt,
+	11_monkey_in_middle.upp;
+
+mainconfig
+	"" = "";
+
