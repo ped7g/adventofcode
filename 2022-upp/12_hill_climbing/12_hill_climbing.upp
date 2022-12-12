@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	12_hill_climbing.cpp,
+	sample.txt,
+	input.txt,
+	12_hill_climbing.upp;
+
+mainconfig
+	"" = "";
+
