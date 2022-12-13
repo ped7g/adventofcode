@@ -4,8 +4,8 @@ using namespace Upp;
 
 class AocTask {	// expected answer sample: 13, 140, input: 6420, 22000
 
-	int p1_sum = 0, pairI = 0;
-	Vector<String> packets { "[[2]]", "[[6]]" };
+	int p1_sum = 0, pairI = 0, p2_divider_2 = 1, p2_divider_6 = 2;
+	String left;
 
 	static const char* find_closing(const char* c, const char* cE) {
 		while (c < cE && ']' != *c) if ('[' == *c++) c = find_closing(c, cE) + 1;
@@ -19,7 +19,7 @@ class AocTask {	// expected answer sample: 13, 140, input: 6420, 22000
 
 	static int compare(const char* l, const char* lE, const char* r, const char* rE) {
 		int cmp;
-		while (l < lE && r < rE) {
+		while (l < lE && r < rE) {		// compare two lists l->lE, r->rE stripped of []
 			if (',' == *l && ',' == *r) ++l, ++r;
 			else if ('[' == *l && '[' == *r) {
 				auto nlE = find_closing(++l, lE), nrE = find_closing(++r, rE);
@@ -41,7 +41,7 @@ class AocTask {	// expected answer sample: 13, 140, input: 6420, 22000
 				l = skip_number(l, lE), r = skip_number(r, rE);
 			}
 		}
-		return (rE <= r) - (lE <= l);	// shorter is less
+		return (rE <= r) - (lE <= l);	// shorter list is less
 	}
 
 	static bool less(const String & a, const String & b) {
@@ -53,22 +53,22 @@ public:
 	void init() { Cout() << "***"; }
 
 	bool line(const String & line) {
-		if (!line.IsEmpty()) packets.Add(line);
-		else {
+		if (line.IsEmpty()) return false;
+		// part 2 - tracking position of divider packets
+		p2_divider_2 += less(line, "[[2]]"), p2_divider_6 += less(line, "[[6]]");
+		// part 1 - tick-tock left/right string, update sum if left < right
+		if (left.IsEmpty()) left = line;		// left
+		else {									// right
 			++pairI;
-			if (less(packets.End()[-2], packets.End()[-1])) p1_sum += pairI;
+			if (less(left, line)) p1_sum += pairI;
+			left.Clear();
 		}
 		return false;							// not finished yet, try next line
 	}
 
 	void finish() {
 		Cout() << "part1 sum of indices: " << p1_sum << EOL;
-		Sort(packets, less);
-		int p2_decoder_key = 1;
-		for (int i = 0; i < packets.GetCount(); ++i) {
-			if ("[[2]]" == packets[i] || "[[6]]" == packets[i]) p2_decoder_key *= (i+1);
-		}
-		Cout() << "part2 decoder key: " << p2_decoder_key << EOL;
+		Cout() << "part2 decoder key: " << p2_divider_2 * p2_divider_6 << EOL;
 	}
 };
 
