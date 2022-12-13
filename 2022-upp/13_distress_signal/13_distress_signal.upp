@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	13_distress_signal.cpp,
+	sample.txt,
+	input.txt,
+	13_distress_signal.upp;
+
+mainconfig
+	"" = "";
+
