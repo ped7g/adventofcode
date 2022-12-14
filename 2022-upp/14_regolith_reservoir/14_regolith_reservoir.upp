@@ -2,10 +2,10 @@ uses
 	Core;
 
 file
-	14.cpp,
+	14_regolith_reservoir.cpp,
 	sample.txt,
 	input.txt,
-	14.upp;
+	14_regolith_reservoir.upp;
 
 mainconfig
 	"" = "";
