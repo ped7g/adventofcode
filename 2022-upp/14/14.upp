@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	14.cpp,
+	sample.txt,
+	input.txt,
+	14.upp;
+
+mainconfig
+	"" = "";
+
