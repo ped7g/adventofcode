@@ -5,6 +5,9 @@ using namespace Upp;
 struct Position : Moveable<Position> {
 	int x, y;
 
+	Position() : x(-1), y(-1) {}
+	Position(int x, int y) : x(x), y(y) {}
+
 	int manhattan_d(const Position & b) const {
 		return abs(x - b.x) + abs(y - b.y);
 	}
@@ -58,8 +61,6 @@ class Part2 {
 
 	int p1_y = 0, p2_sz = 0;	// part 2 size of area of interest
 	Vector<Tuple<Position, Position>> input;
-	Vector<Span> spans;
-	Index<int> beacons;
 
 public:
 
@@ -77,25 +78,44 @@ public:
 	}
 
 	void finish() {
-		for (int ly = 0; ly <= p2_sz; ++ly) {
-			spans.Clear(), beacons.Clear();
-			for (const auto & i : input) {
-				if (ly == i.b.y) beacons.FindAdd(i.b.x);	// track all unique beacons at ly
-				int line_power = i.b.manhattan_d(i.a) - abs(ly-i.a.y);	// sensor X-range at ly
-				if (0 <= line_power) spans.Add({i.a.x - line_power, i.a.x + line_power + 1});
-			}
-			ASSERT(!spans.IsEmpty());						// this would cause 4mil of output
-			Sort(spans, Span::less);
-			spans.Add({p2_sz + 1, p2_sz + 1});				// add span to go full range with x
-			int x = 0;
-			for (const auto & s : spans) {					// look for uncovered position
-				if (p2_sz < x) break;						// whole range 0..p2_sz checked
-				while (x < s.from) {			// uncovered position detected, print it out
-					Cout() << Format("part2 beacon can be at [%d,%d] = %lld", x, ly, 4000000LL * x + ly) << EOL;
-					++x;
+		CoWork cw;
+		Mutex result_lock;
+		Vector<Position> results;
+		const int y_step = std::max(p2_sz / 32 + 1, 1024);
+		for (int ls = 0, le = y_step; ls <= p2_sz; ls = le, le += y_step) {		// split work across threads
+			le = std::min(le, p2_sz + 1);
+			cw & [&, ls, le] {
+				Vector<Span> spans;
+				Index<int> beacons;
+				spans.Reserve(input.GetCount());
+				beacons.Reserve(input.GetCount());
+				for (int ly = ls; ly < le; ++ly) {
+					spans.Clear(), beacons.Clear();
+					for (const auto & i : input) {
+						if (ly == i.b.y) beacons.FindAdd(i.b.x);	// track all unique beacons at ly
+						int line_power = i.b.manhattan_d(i.a) - abs(ly-i.a.y);	// sensor X-range at ly
+						if (0 <= line_power) spans.Add({i.a.x - line_power, i.a.x + line_power + 1});
+					}
+					ASSERT(!spans.IsEmpty());						// this would cause 4mil of output
+					Sort(spans, Span::less);
+					spans.Add({p2_sz + 1, p2_sz + 1});				// add span to go full range with x
+					int x = 0;
+					for (const auto & s : spans) {					// look for uncovered position
+						if (p2_sz < x) break;						// whole range 0..p2_sz checked
+						while (x < s.from) {			// uncovered position detected, print it out
+							result_lock.Enter();
+							results.Add({x, ly});
+							result_lock.Leave();
+							++x;
+						}
+						if (x < s.to) x = s.to;
+					}
 				}
-				if (x < s.to) x = s.to;
-			}
+			};
+		}
+		cw.Finish();
+		for (const auto & r : results) {
+			Cout() << Format("part2 beacon can be at [%d,%d] = %lld\n", r.x, r.y, 4000000LL * r.x + r.y);
 		}
 		Cout() << "part2 finished (full scan)" << EOL;
 	}
