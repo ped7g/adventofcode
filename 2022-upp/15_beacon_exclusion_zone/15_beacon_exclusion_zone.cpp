@@ -86,6 +86,7 @@ public:
 			}
 			ASSERT(!spans.IsEmpty());						// this would cause 4mil of output
 			Sort(spans, Span::less);
+			spans.Add({p2_sz + 1, p2_sz + 1});				// add span to go full range with x
 			int x = 0;
 			for (const auto & s : spans) {					// look for uncovered position
 				if (p2_sz < x) break;						// whole range 0..p2_sz checked
