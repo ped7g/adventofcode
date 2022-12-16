@@ -1,0 +1,2 @@
+0 4000000
+Sensor at x=3000001, y=3000000: closest beacon is at x=1, y=0

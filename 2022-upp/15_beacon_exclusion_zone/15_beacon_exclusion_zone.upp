@@ -5,6 +5,7 @@ file
 	15_beacon_exclusion_zone.cpp,
 	sample.txt,
 	input.txt,
+	sample2.txt,
 	15_beacon_exclusion_zone.upp;
 
 mainconfig
