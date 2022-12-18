@@ -1,0 +1,13 @@
+uses
+	Core;
+
+file
+	16_proboscidea_volcanium.cpp,
+	sample2.txt,
+	sample.txt,
+	input.txt,
+	16_proboscidea_volcanium.upp;
+
+mainconfig
+	"" = "";
+
