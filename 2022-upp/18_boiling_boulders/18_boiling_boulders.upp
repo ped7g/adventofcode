@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	18_boiling_boulders.cpp,
+	sample.txt,
+	input.txt,
+	18_boiling_boulders.upp;
+
+mainconfig
+	"" = "";
+
