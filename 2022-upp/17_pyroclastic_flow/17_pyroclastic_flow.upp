@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	17_pyroclastic_flow.cpp,
+	sample.txt,
+	input.txt,
+	17_pyroclastic_flow.upp;
+
+mainconfig
+	"" = "";
+
