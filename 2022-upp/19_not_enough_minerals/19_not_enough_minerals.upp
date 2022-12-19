@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	19_not_enough_minerals.cpp,
+	sample.txt,
+	input.txt,
+	19_not_enough_minerals.upp;
+
+mainconfig
+	"" = "";
+
