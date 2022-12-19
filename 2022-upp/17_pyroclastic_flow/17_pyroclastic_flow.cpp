@@ -2,6 +2,11 @@
 
 using namespace Upp;
 
+// expected result:
+//	sample.txt:		3068, 1514285714288, wraps [  +35,   +53]
+//	sample2.txt:	4473, 2160701754672, wraps [+1425, +3079]
+//	input.txt:		3227, 1597714285698, wraps [+1750, +2796]
+
 struct Position { int x, y; };
 
 constexpr int PIECES_N = 5, PIECES_M = 5, CHAMBER_SIZE = 1024;

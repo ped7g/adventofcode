@@ -5,6 +5,7 @@ file
 	17_pyroclastic_flow.cpp,
 	sample.txt,
 	input.txt,
+	sample2.txt,
 	17_pyroclastic_flow.upp;
 
 mainconfig
