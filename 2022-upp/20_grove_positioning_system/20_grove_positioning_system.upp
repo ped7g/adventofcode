@@ -1,0 +1,13 @@
+uses
+	Core;
+
+file
+	20_grove_positioning_system.cpp,
+	sample2.txt,
+	sample.txt,
+	input.txt,
+	20_grove_positioning_system.upp;
+
+mainconfig
+	"" = "";
+
