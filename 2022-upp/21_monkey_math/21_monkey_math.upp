@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	21_monkey_math.cpp,
+	sample.txt,
+	input.txt,
+	21_monkey_math.upp;
+
+mainconfig
+	"" = "";
+
