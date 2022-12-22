@@ -2,95 +2,89 @@
 
 using namespace Upp;	// expected answer: sample [6032, 5031], input [27492, 78291]
 
-enum { D_R = 0, D_D = 1, D_L = 2, D_U = 3, SAME = 0x00, ROTL = 0x01, ROTR = 0x02, ROTU = 0x04, NONE = 0xFF };
+enum { D_R = 0, D_D = 1, D_L = 2, D_U = 3, SAME = 0, ROTL = 1, ROTU = 2, ROTR = 3, NONE = -1 };
 
-static constexpr int m[4][2] = { { +1,  0 }, {  0, +1 }, { -1,  0 }, {  0, -1 } };
+static constexpr int move_delta[4][2] = { { +1,  0 }, {  0, +1 }, { -1,  0 }, {  0, -1 } };
 
-struct CoordinateSystem {
-	int s = NONE;				// side number
-	int t = NONE;				// required transformation while wrapping around
+struct CoordinateSystem {		// side number at edge, required coordinate transformation
+	int s = NONE, t = NONE;
+};
+
+struct Position {				// local (within side) coordinates [x,y], direction, side number
+	int x = 0, y = 0, d = D_R, s = 0;
 };
 
 struct Side {
-	int b_x1, b_x2, b_y1, b_y2;	// valid range of char data in board array for this side
-	CoordinateSystem next[4];	// sides at right, down, left, up (like directions are mapped)
+	Position origin;			// top-left of area in board for this side (only [x,y] is used)
+	CoordinateSystem next[4];	// sides at right, down, left, up + required coordinates transformation
 };
 
 class AoC2022Day22Task {
 	Vector<String> board;
 	String path;
-	int x = 0, y = 0, d = 0, max_l = 0, N, Nm, s = 0;
+	Position p;
+	int M = 0, N = 0;
 	Side sides[6];
 
 public:
 
 	void init() { Cout() << "***"; }
 
-	bool p1_fwd() {
-		int nx = x, ny = y;
-		do {
-			nx += m[d][0], ny += m[d][1];
-			if (ny < 0) ny = board.GetCount() - 1;
-			if (board.GetCount() <= ny) ny = 0;
-			if (nx < 0) nx = board[ny].GetLength() - 1;
-			if (board[ny].GetLength() <= nx) nx = 0;
-		} while (' ' == board[ny][nx]);
-		if ('.' == board[ny][nx]) x = nx, y = ny;
-		else ASSERT('#' == board[ny][nx]);
-		return ('.' == board[ny][nx]);
+	bool line(const String & line) {
+		if (line.IsEmpty()) return false;
+		if (IsDigit(line[0])) path = line;					// this is path line
+		else board.Add(line), M = std::max(M, line.GetLength());
+		return IsDigit(line[0]);							// path line terminates input
 	}
 
-	void p2_wrap(int & s, int & x, int & y, int & d) {
-		ASSERT((D_R == d && x == N) || (D_D == d && y == N) || (D_L == d && x == -1) || (D_U == d && y == -1));
-		int tx = (x + N) % N, ty = (y + N) % N, td = d;	// wrapped coordinates for SAME transformation
-		switch (sides[s].next[td].t) {
-			case ROTL:	y = tx,		x = Nm-ty,	d = (td+1)&3;	break;
-			case ROTR:	y = Nm-tx,	x = ty,		d = (td-1)&3;	break;
-			case ROTU:	y = Nm-ty,	x = Nm-tx,	d = (td+2)&3;	break;
-			case SAME:	y = ty,		x = tx;		d = td;			break;
-			default:							ASSERT(false);
+	template<int part> Position wrap(Position p) {			// wrap coordinates to next side
+		ASSERT((D_R == p.d && p.x == M) || (D_D == p.d && p.y == N) || (D_L == p.d && p.x == -1) || (D_U == p.d && p.y == -1));
+		p.x = (p.x + M) % M, p.y = (p.y + N) % N;			// wrap coordinates to MxN first
+		if constexpr (1 == part) {
+			return p;	// part 1 only wraps around to big MxN board
+		} else {		// part 2 requires also coordinates transformation from side to side
+			int t = sides[p.s].next[p.d].t, nd = (p.d + t) & 3, ns = sides[p.s].next[p.d].s;
+			switch (t) {									// transform wrapped coordinates
+				case ROTL:	return { M-1-p.y,	p.x,		nd,	ns };
+				case ROTR:	return { p.y,		N-1-p.x,	nd,	ns };
+				case ROTU:	return { M-1-p.x,	N-1-p.y,	nd,	ns };
+				default:	return { p.x,		p.y,		nd,	ns };	// SAME transform
+			}
 		}
-		s = sides[s].next[td].s;					// new side
 	}
 
-	bool p2_fwd() {
-		int nx = x, ny = y, ns = s, nd = d;
-		nx += m[nd][0], ny += m[nd][1];
-		if (ny < 0 || N <= ny || nx < 0 || N <= nx) p2_wrap(ns, nx, ny, nd);
-		char n_tile = board[sides[ns].b_y1 + ny][sides[ns].b_x1 + nx];
-		if ('.' == n_tile) s = ns, x = nx, y = ny, d = nd;
-		else ASSERT('#' == n_tile);
+	template<int part> bool fwd() {
+		Position np = p;
+		char n_tile;
+		do {
+			np.x += move_delta[np.d][0], np.y += move_delta[np.d][1];
+			if (np.y < 0 || N <= np.y || np.x < 0 || M <= np.x) np = wrap<part>(np);
+			n_tile = board[sides[np.s].origin.y + np.y][sides[np.s].origin.x + np.x];
+		} while (1 == part && ' ' == n_tile);				// part 1 -> jump over whitespace
+		if ('.' == n_tile) p = np; else ASSERT('#' == n_tile);
 		return ('.' == n_tile);
 	}
 
-	bool line(const String & line) {
-		if (line.IsEmpty()) return false;
-		if (!IsDigit(line[0])) {
-			board.Add(line);
-			max_l = std::max(max_l, line.GetLength());
-		} else path = line;
-		return IsDigit(line[0]);									// path line terminates input
+	template<int part> void follow_path() {
+		int li = 0, le = path.GetLength();
+		while (li < le) {
+			for (int r = atoi(~path + li); r-- && fwd<part>(); ) ;	// move until wall
+			while (++li < le && IsDigit(path[li])) ;				// skip input to turn-letter
+			p.d = (p.d - ('L' == path[li]) + ('R' == path[li])) & 3;// turn
+			++li;
+		}
 	}
 
 	void part1() {
-		// extend board on each line with space
-		for (auto & line : board) line.Cat(' ', max_l - line.GetLength());
-		int li = 0, le = path.GetLength();
-		while (' ' == board[y][x]) ++x;								// find top-left tile of board
-		while (li < le) {
-			for (int r = atoi(~path + li); r-- && p1_fwd(); ) ;		// move until wall
-			while (++li < le && IsDigit(path[li])) ;				// skip input to turn-letter
-			d = (d - ('L' == path[li]) + ('R' == path[li])) & 3;	// turn
-			++li;
-		}
-		int password = 1000 * (y+1) + 4 * (x+1) + d;
-		Cout() << "part1: " << password << EOL;
+		sides[0] = { {0, 0} }, N = board.GetCount(), p = {};		// side 0 covers whole global board
+		while (' ' == board[p.y][p.x]) ++p.x;						// find top-left tile of board
+		follow_path<1>();
+		Cout() << "part1: " << (1000 * (p.y+1) + 4 * (p.x+1) + p.d) << EOL;
 	}
 
 	void part2() {
 		// guess size of cube side plane based on collected board data
-		N = board.GetCount() <= 4 * 5 ? 4 : 50;		// layout could be at most 5 squares tall
-		Nm = N - 1;
+		M = N = board.GetCount() <= 4 * 5 ? 4 : 50;	// layout could be at most 5 squares tall
 		// map the cube layout on the board data
 		/* THIS IS INCORRECT ALGORITHM, it's more tricky than fixed dx,dy -> fixed transformation
 		x = 0, y = 0, s = 0;
@@ -157,41 +151,33 @@ public:
 			// ..0.
 			// 123.
 			// ..45
-			sides[0] = { 0 + 2*N, -1 + 3*N, 0 + 0*N, -1 + 1*N, { {5,ROTU}, {3,SAME}, {2,ROTR}, {1,ROTU} } };
-			sides[1] = { 0 + 0*N, -1 + 1*N, 0 + 1*N, -1 + 2*N, { {2,SAME}, {4,ROTU}, {5,ROTL}, {0,ROTU} } };
-			sides[2] = { 0 + 1*N, -1 + 2*N, 0 + 1*N, -1 + 2*N, { {3,SAME}, {4,ROTR}, {1,SAME}, {0,ROTL} } };
-			sides[3] = { 0 + 2*N, -1 + 3*N, 0 + 1*N, -1 + 2*N, { {5,ROTL}, {4,SAME}, {2,SAME}, {0,SAME} } };
-			sides[4] = { 0 + 2*N, -1 + 3*N, 0 + 2*N, -1 + 3*N, { {5,SAME}, {1,ROTU}, {2,ROTL}, {3,SAME} } };
-			sides[5] = { 0 + 3*N, -1 + 4*N, 0 + 2*N, -1 + 3*N, { {0,ROTU}, {1,ROTR}, {4,SAME}, {3,ROTR} } };
+			sides[0] = { {0 + 2*N, 0 + 0*N}, { {5,ROTU}, {3,SAME}, {2,ROTR}, {1,ROTU} } };
+			sides[1] = { {0 + 0*N, 0 + 1*N}, { {2,SAME}, {4,ROTU}, {5,ROTL}, {0,ROTU} } };
+			sides[2] = { {0 + 1*N, 0 + 1*N}, { {3,SAME}, {4,ROTR}, {1,SAME}, {0,ROTL} } };
+			sides[3] = { {0 + 2*N, 0 + 1*N}, { {5,ROTL}, {4,SAME}, {2,SAME}, {0,SAME} } };
+			sides[4] = { {0 + 2*N, 0 + 2*N}, { {5,SAME}, {1,ROTU}, {2,ROTL}, {3,SAME} } };
+			sides[5] = { {0 + 3*N, 0 + 2*N}, { {0,ROTU}, {1,ROTR}, {4,SAME}, {3,ROTR} } };
 		} else {
 			// .01.
 			// .2..
 			// 34..
 			// 5...
-			sides[0] = { 0 + 1*N, -1 + 2*N, 0 + 0*N, -1 + 1*N, { {1,SAME}, {2,SAME}, {3,ROTU}, {5,ROTL} } };
-			sides[1] = { 0 + 2*N, -1 + 3*N, 0 + 0*N, -1 + 1*N, { {4,ROTU}, {2,ROTL}, {0,SAME}, {5,SAME} } };
-			sides[2] = { 0 + 1*N, -1 + 2*N, 0 + 1*N, -1 + 2*N, { {1,ROTR}, {4,SAME}, {3,ROTR}, {0,SAME} } };
-			sides[3] = { 0 + 0*N, -1 + 1*N, 0 + 2*N, -1 + 3*N, { {4,SAME}, {5,SAME}, {0,ROTU}, {2,ROTL} } };
-			sides[4] = { 0 + 1*N, -1 + 2*N, 0 + 2*N, -1 + 3*N, { {1,ROTU}, {5,ROTL}, {3,SAME}, {2,SAME} } };
-			sides[5] = { 0 + 0*N, -1 + 1*N, 0 + 3*N, -1 + 4*N, { {4,ROTR}, {1,SAME}, {0,ROTR}, {3,SAME} } };
+			sides[0] = { {0 + 1*N, 0 + 0*N}, { {1,SAME}, {2,SAME}, {3,ROTU}, {5,ROTL} } };
+			sides[1] = { {0 + 2*N, 0 + 0*N}, { {4,ROTU}, {2,ROTL}, {0,SAME}, {5,SAME} } };
+			sides[2] = { {0 + 1*N, 0 + 1*N}, { {1,ROTR}, {4,SAME}, {3,ROTR}, {0,SAME} } };
+			sides[3] = { {0 + 0*N, 0 + 2*N}, { {4,SAME}, {5,SAME}, {0,ROTU}, {2,ROTL} } };
+			sides[4] = { {0 + 1*N, 0 + 2*N}, { {1,ROTU}, {5,ROTL}, {3,SAME}, {2,SAME} } };
+			sides[5] = { {0 + 0*N, 0 + 3*N}, { {4,ROTR}, {1,SAME}, {0,ROTR}, {3,SAME} } };
 		}
-		// follow the path
-		x = 0, y = 0, d = 0, s = 0;		// start position is at side 0, x = 0, y = 0, d = 0
-		int li = 0, le = path.GetLength();
-		while (li < le) {
-			for (int r = atoi(~path + li); r-- && p2_fwd(); ) ;		// move until wall
-			while (++li < le && IsDigit(path[li])) ;				// skip input to turn-letter
-			d = (d - ('L' == path[li]) + ('R' == path[li])) & 3;	// turn
-			++li;
-		}
-		// transform local side x,y,d into global board position
-		x += sides[s].b_x1;
-		y += sides[s].b_y1;
-		int password = 1000 * (y+1) + 4 * (x+1) + d;
-		Cout() << "part2: " << password << EOL;
+		// reset starting position and follow the path
+		p = {}, follow_path<2>();
+		// transform local side [x,y] into global board position
+		p.x += sides[p.s].origin.x, p.y += sides[p.s].origin.y;
+		Cout() << "part2: " << (1000 * (p.y+1) + 4 * (p.x+1) + p.d) << EOL;
 	}
 
 	void finish() {
+		for (auto & line : board) line.Cat(' ', M - line.GetLength()); // make board MxN
 		part1();
 		part2();
 	}
