@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	22_monkey_map.cpp,
+	sample.txt,
+	input.txt,
+	22_monkey_map.upp;
+
+mainconfig
+	"" = "";
+
