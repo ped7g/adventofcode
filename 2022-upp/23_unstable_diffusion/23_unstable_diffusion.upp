@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	23_unstable_diffusion.cpp,
+	sample.txt,
+	input.txt,
+	23_unstable_diffusion.upp;
+
+mainconfig
+	"" = "";
+
