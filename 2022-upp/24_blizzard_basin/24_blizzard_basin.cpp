@@ -2,120 +2,131 @@
 
 using namespace Upp;
 
+constexpr int get_gcd(int a, int b) { return b ? get_gcd(b, a % b) : a; }
+constexpr int get_lcm(int a, int b) { return a * b / get_gcd(a, b); }
+constexpr char delta_symbol[5] = { '<', '>', '^', 'v', 0 };
+constexpr int16 deltas[5][2] = { {-1, 0}, {+1, 0}, {0, -1}, {0, +1}, {0, 0} };	// < > ^ v .
+
 struct Position : Moveable<Position> {
-	uint16 t;
-	uint8 x, y;
+	uint16	t;							// warped [0, LCM) time of the position
+	uint8	x, y;
 };
 
-int get_gcd(int a, int b) {
-	return b ? get_gcd(b, a % b) : a;
-}
+struct PathSearchData {
+	const int M, N, LCM;
+	const Position to;
+	// LCM x M x N field with all possible blizzard movement and path-costs to "to" tile
+	Vector<Vector<Vector<uint16>>> m;	// 0 unreachable, 1..0xFFFE -> minutes to exit, 0xFFFF -> blizzard(s)
+	bool do_init_positions = true;		// needs pre-seeding positions before first search
+	BiVector<Position> positions;		// FIFO queue of positions to process during path search
 
-int get_lcm(int a, int b) {
-	return a * b / get_gcd(a, b);
-}
+	PathSearchData(const PathSearchData &) = delete;
 
-const char delta_symbol[4] = { '<', '>', '^', 'v' };
-const int deltas[5][2] = { {-1, 0}, {+1, 0}, {0, -1}, {0, +1}, {0, 0} };	// < > ^ v .
-
-class Part1 {
-	int entry, exit, M, N = -2, LCM;
-	Vector<String> input;
-	Vector<Vector<Vector<uint16>>> m;			// LCM x field with all possible blizzard movement
-	// uint16 -> 0 unknown, 1..0xFFFE -> steps to exit, 0xFFFF -> blizzard(s)
-	BiVector<Position> positions;
-
-public:
-	void init() { Cout() << "***"; }
-
-	bool line(const String & line) {
-		if (-2 == N++) {
-			M = line.GetLength() - 2;
-			entry = line.Find("#.#");
-		} else if ((exit = line.Find("#.#")) < 0) {	// not a last line
-			input.Add(line.Mid(1, M));
+	PathSearchData(int M, int N, int LCM, const Position & to, const Vector<String> & blizzards)
+		: M(M), N(N), LCM(LCM), to(to)
+	{
+		// empty LCM x M x N arrays of uint16
+		m.Reserve(LCM);
+		for (uint16 t = 0; t < LCM; ++t) {
+			auto & mt = m.Add();
+			mt.Reserve(N);
+			for (int y = 0; y < N; ++y) mt.Add().Insert(0, 0, M);
 		}
-		return false;							// not finished yet, try next line
-	}
-
-	void clear_m_after_search() {
-		for (auto & mt : m) for (auto & mty : mt) for (auto & mtyx : mty) {	// clear internal data
-			if (0xFFFF == mtyx) continue;		// keep blizzards
-			mtyx = 0;
+		// populate fields with blizzards from input
+		for (int y = 0; y < N; ++y) for (int x = 0; x < M; ++x) {
+			for (int di = 0; di < 4; ++di) {
+				if (delta_symbol[di] == blizzards[y][x]) {	// blizzard found, set it to all m[t] fields
+					int bx = x, by = y, dx = deltas[di][0], dy = deltas[di][1];
+					for (uint16 t = 0; t < LCM; ++t) {
+						m[t][by][bx] = 0xFFFF;
+						bx += dx; if (bx < 0) bx += M; else if (M <= bx) bx -= M;
+						by += dy; if (by < 0) by += N; else if (N <= by) by -= N;
+					}
+					break;
+				}
+			}
 		}
 	}
 
-	int search_path(Position from, const Position & to) {
-		// seed path search with exit/entry path and fill the FIFO queue for the search
-		positions.Clear();	positions.Reserve(M * N * N);
+	// provided instance has to have "m" fields already initialised, but in pristine state (no costs yet)
+	PathSearchData(const PathSearchData & b, const Position & to) : M(b.M), N(b.N), LCM(b.LCM), to(to) {
+		m = clone(b.m);
+		ASSERT(LCM == m.GetCount() && N == m[0].GetCount() && M == m[0][0].GetCount());
+	}
+
+	void init_positions() {
+		// seed path search with "to": cost = 1 from tile next to "to" and fill the FIFO search-queue
+		positions.Reserve(M * N * 2);
 		for (uint16 t = 0; t < LCM; ++t) {
 			if (m[t][to.y][to.x]) continue;		// blocked by blizzard in this T
 			m[t][to.y][to.x] = 1;				// cost to "to" is 1 from here in every T
 			positions.AddTail({.t = t, .x = to.x, .y = to.y});
 		}
-		// find valid entry point
-		// ! doesn't account for using entry/exit to sidestep blizzards !
+		do_init_positions = false;
+	}
+
+	int search_path_from(Position from) {
+		// if needed, init starting search positions (based on "to" position)
+		if (do_init_positions) init_positions();
+		// look up answer, if cost is 0, try to run search, if still zero, wait longer at entry
 		int entry_wait = 1;
-		while (0xFFFF == m[from.t][from.y][from.x]) {
-			++entry_wait;
-			if (LCM == ++from.t) from.t = 0;
-		}
-		// search for path to entry
-		ASSERT(0 == m[from.t][from.y][from.x]);	// from at correct time must be free to move in
-		while (positions.GetCount() && 0 == m[from.t][from.y][from.x] ) {
-			auto p = positions.PopHead();
-			uint16 cost = m[p.t][p.y][p.x] + 1;	// +1 minute to total cost
-			if (0 == p.t--) p.t = LCM - 1;
-			for (const auto & delta : deltas) {
-				if (delta[0] + p.x < 0 || M <= delta[0] + p.x) continue;
-				if (delta[1] + p.y < 0 || N <= delta[1] + p.y) continue;
-				if (0xFFFF == m[p.t][delta[1] + p.y][delta[0] + p.x]) continue;	// blizzard there
-				ASSERT(m[p.t][delta[1] + p.y][delta[0] + p.x] <= cost);
-				if (0 != m[p.t][delta[1] + p.y][delta[0] + p.x]) continue;	// already reachable
-				m[p.t][delta[1] + p.y][delta[0] + p.x] = cost;				// new reach
-				positions.AddTail({.t = p.t, .x = uint8(delta[0] + p.x), .y = uint8(delta[1] + p.y)});
+		while (0xFFFF == m[from.t][from.y][from.x] || 0 == m[from.t][from.y][from.x]) {
+			// if no cost assigned yet, exhaust first search-queue (until cost assigned or empty)
+			while (0 == m[from.t][from.y][from.x] && !positions.IsEmpty()) {
+				auto p = positions.PopHead();
+				uint16 cost = m[p.t][p.y][p.x] + 1;						// +1 minute to total cost
+				if (0 == p.t--) p.t = LCM - 1;							// check tiles in t-1 time
+				for (const auto & delta : deltas) {						// try all moves + wait
+					int x = delta[0] + p.x, y = delta[1] + p.y;
+					if (x < 0 || M <= x || y < 0 || N <= y) continue;	// move out of bounds
+					if (0xFFFF == m[p.t][y][x]) continue;				// blizzard there
+					ASSERT(m[p.t][y][x] <= cost);
+					if (0 != m[p.t][y][x]) continue;					// reached before
+					m[p.t][y][x] = cost;								// new lowest-cost reach
+					positions.AddTail({.t = p.t, .x = uint8(x), .y = uint8(y)});
+				}
+			}
+			// if still no cost assigned (unreachable or blizzard), try "later" entry
+			if (0 == m[from.t][from.y][from.x] || 0xFFFF == m[from.t][from.y][from.x]) {
+				++entry_wait;
+				if (LCM == ++from.t) from.t = 0;
 			}
 		}
-		if (0 == m[from.t][from.y][from.x]) {	// unreachable, try wait at entry even more
-			clear_m_after_search();
-			if (LCM == ++from.t) from.t = 0;
-			return entry_wait + search_path(from, to);	// entry_wait +1 comes from recursion
-		}
-		ASSERT(m[from.t][from.y][from.x]);
+		// return the cost of the path found
+		ASSERT(0 < m[from.t][from.y][from.x] && m[from.t][from.y][from.x] < 0xFFFF);
 		return entry_wait + m[from.t][from.y][from.x];
+	}
+};
+
+class Part1 {
+	int entry = -1, exit = -1, M, N = -2, LCM;
+	Vector<String> input;
+
+public:
+	void init() { Cout() << "***"; }
+
+	bool line(const String & line) {
+		if (-2 == N++) M = line.GetLength() - 2, entry = line.Find("#.#");	// first line
+		else if ((exit = line.Find("#.#")) < 0) input.Add(line.Mid(1, M));	// exit line or field line
+		return (0 <= exit);						// finished when exit is defined
 	}
 
 	void finish() {
 		LCM = get_lcm(M, N);					// least common multiple of [M, N]
 		Cout() << "input: " << Format("%d`x%d (LCM %d) entry %d, exit %d\n", M, N, LCM, entry, exit);
-		// set up empty fields for all possible t = [0,LCM)
-		m.Reserve(LCM);
-		for (uint16 t = 0; t < LCM; ++t) {
-			m.Add().Reserve(N);
-			auto & mt = m.Top();
-			for (int y = 0; y < N; ++y) mt.Add().Insert(0, 0, M);	// empty MxN map in mt
-		}
-		// populate fields with blizzards from input
-		for (int y = 0; y < N; ++y) {
-			for (int x = 0; x < M; ++x) {
-				int dt = 0;
-				for (dt = 0; dt < 4; ++dt) if (delta_symbol[dt] == input[y][x]) break;
-				if (4 == dt) continue;
-				for (uint16 t = 0; t < LCM; ++t) {
-					int bx = (x + t * deltas[dt][0]) % M;	if (bx < 0) bx += M;
-					int by = (y + t * deltas[dt][1]) % N;	if (by < 0) by += N;
-					m[t][by][bx] = 0xFFFF;
-				}
-			}
-		}
+		// prepare path-search data for both part one and part two
+		Position p_entry {.x = uint8(entry), .y = 0}, p_exit {.x = uint8(exit), .y = uint8(N-1)};
+		PathSearchData to_exit(M, N, LCM, p_exit, input);
+		PathSearchData to_entry(to_exit, p_entry);
 		// part one - run the search from entry to exit at time 0
-		int part1_time = search_path({.t = 1, .x = uint8(entry), .y = 0}, {.x = uint8(exit), .y = uint8(N-1)});
+		p_entry.t = 1;							// well, actually time 1 to move over entry tile
+		int part1_time = to_exit.search_path_from(p_entry);
 		Cout() << "part1: shortest path is " << part1_time << " minutes\n";
 		// part two - re-run the search from exit to entry at correct time, then one more
-		clear_m_after_search();
-		int part2_time_back = search_path({.t = uint16((part1_time + 1) % LCM), .x = uint8(exit), .y = uint8(N-1)}, {.x = uint8(entry), .y = 0});
-		clear_m_after_search();
-		int part2_time_forth = search_path({.t = uint16((part1_time + part2_time_back + 1) % LCM), .x = uint8(entry), .y = 0}, {.x = uint8(exit), .y = uint8(N-1)});
+		p_exit.t = (part1_time + 1) % LCM;
+		int part2_time_back = to_entry.search_path_from(p_exit);
+		p_entry.t = (part1_time + part2_time_back + 1) % LCM;
+		int part2_time_forth = to_exit.search_path_from(p_entry);
 		Cout() << Format("part2: shortest path is %d + %d + %d = %d minutes\n", part1_time,
 			part2_time_back, part2_time_forth, part1_time + part2_time_back + part2_time_forth);
 	}
