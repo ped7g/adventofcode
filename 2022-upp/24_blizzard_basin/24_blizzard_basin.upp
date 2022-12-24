@@ -1,0 +1,13 @@
+uses
+	Core;
+
+file
+	24_blizzard_basin.cpp,
+	sample2.txt,
+	sample.txt,
+	input.txt,
+	24_blizzard_basin.upp;
+
+mainconfig
+	"" = "";
+
