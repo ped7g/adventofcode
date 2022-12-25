@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	25_full_of_hot_air.cpp,
+	sample.txt,
+	input.txt,
+	25_full_of_hot_air.upp;
+
+mainconfig
+	"" = "";
+
