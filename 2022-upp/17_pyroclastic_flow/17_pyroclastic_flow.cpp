@@ -9,9 +9,12 @@ using namespace Upp;
 
 struct Position { int x, y; };
 
-constexpr int PIECES_N = 5, PIECES_M = 5, CHAMBER_SIZE = 1024;
+static constexpr int PIECES_N = 5, PIECES_M = 5, CHAMBER_SIZE = 1024;
 // chamber size 32 is not enough for input data and 10k pieces (some piece must fall deep down)
 // 1024 should be really plenty unless some jets are very very very carefully handcrafted
+
+static constexpr int64 I_TARGETS[] = { 2022L, 10000L, 1000000L, 1000000000000L };
+static constexpr const char* TARGET_NAMES[] = { "part1 [", "i     [", "part2 [" };
 
 static const Position pieces[PIECES_N][PIECES_M] = {
 //####
@@ -41,11 +44,11 @@ static const Position pieces[PIECES_N][PIECES_M] = {
 class Part1 {
 
 	String jets;
-	Vector<Vector<char>> chamber;
+	Vector<uint8> chamber;
 
 public:
 
-	void init() { Cout() << "part1"; }
+	void init() { Cout() << "***"; }
 
 	bool line(const String & line) {
 		ASSERT(jets.IsEmpty() && !line.IsEmpty());
@@ -58,7 +61,7 @@ public:
 		for (auto & pos : pieces[p]) {
 			if (-1 == pos.x) continue;
 			if (7 <= x + pos.x) return false;
-			if (chamber[(y + pos.y) % CHAMBER_SIZE][x + pos.x] != '.') return false;
+			if (chamber[(y + pos.y) % CHAMBER_SIZE] & (1 << (x + pos.x))) return false;
 		}
 		return true;
 	}
@@ -67,87 +70,74 @@ public:
 		for (auto & pos : pieces[p]) {
 			if (-1 == pos.x) continue;
 			ASSERT(0 <= x + pos.x && x + pos.x < 7);
-			chamber[(y + pos.y) % CHAMBER_SIZE][x + pos.x] = '#';
+			chamber[(y + pos.y) % CHAMBER_SIZE] |= (1 << (x + pos.x));
 			last_y = std::max(last_y, y + pos.y);
 		}
 	}
 
-	void clear_chamber(int y) {
-		y %= CHAMBER_SIZE;
-		for (int x = 0; x < 7; ++x) chamber[y][x] = '.';
+	uint64 chamber_top_8_lines(int y) {
+		int64 r = -1;
+		while (r < 0) r = (r << 8) | (chamber[y-- % CHAMBER_SIZE]);
+		return r;
 	}
 
 	void finish() {
-		int piece = 0, jet = 0, last_y = -1, chamber_reserve = CHAMBER_SIZE;
-		// reserve space in chamber
-		while (chamber_reserve--) {
-			chamber.Add().Insert(0, '.', 7);
-			chamber.Top().Add(0);
-		}
-		int64 target_i[] = { 2022, 10000, 1000000, 1000000000000 };
-		int target_i_i = 0, setup_wrapping = 1;
-		Vector<Tuple<int, int64, int64>> wrapping;
-		int64 y_ofs = 0, wrap_i = -1, wrap_t = -1, events_to_print = jets.GetLength();
-		for (int64 i = 0; i < 1000000000000; ++i) {	// drop N pieces
-			// print height of tower when piece and jet wraps around at the same time
-			if (setup_wrapping && 0 == piece && 2 * jets.GetLength() <= i) {
-				for (auto & w : wrapping) {
-					if (w.a == jet) {
-						int64 nwi = i - w.b, nwt = y_ofs + last_y + 1 - w.c;
-						if (-1 == wrap_i) wrap_i = nwi, wrap_t = nwt;
-						else if (nwi != wrap_i || nwt != wrap_t) {
-							Cout() << Format("Different wrap at i %lld jet %d: wi %lld vs %lld, wt %lld vs %lld\n",
-								i, jet, wrap_i, nwi, wrap_t, nwt);
-							Exit();
+		int piece = 0, jet = 0, last_y = -1;
+		chamber.Insert(0, 0, CHAMBER_SIZE);			// reserve space in chamber
+		Vector<Tuple<int, int64, int64, uint64>> wrapping;
+		int64 i = 0, y_ofs = 0, wrap_i = -1, wrap_t = -1;
+		for (int64 target_i : I_TARGETS) {
+			for (; i < target_i; ++i) {				// drop in total target_i pieces
+				// track height of tower when piece and jet wraps around at the same time
+				if (-1 == wrap_i && 0 == piece && 2 * jets.GetLength() <= i) {
+					// look for possible wrapping period of whole state (extract [wrap_i, wrap_t])
+					for (auto & w : wrapping) {
+						if (w.a == jet) {			// same piece, same jet, verify chamber top
+							if (chamber_top_8_lines(last_y) != w.d) {
+								Cout() << Format("Top 8 chamber lines don't match at i %lld jet %d\n", i, jet);
+								Exit();
+							}
+							// calculate wrap period for pieces and tower height
+							wrap_i = i - w.b, wrap_t = y_ofs + last_y + 1 - w.c;
+							Cout() << Format(" (wrap found: %+7lld,%+16lld)\n", wrap_i, wrap_t);
+							break;
 						}
-						w.b = i, w.c = y_ofs + last_y + 1;
-						break;
+					}
+					if (-1 == wrap_i) {
+						wrapping.Add({ jet, i, y_ofs + last_y + 1, chamber_top_8_lines(last_y) });
+						//Cout() << Format("(seeding wrapping) piece, 0, jet, %5>d, i, %14>lld, tower, %14>lld, top 8 lines %016llX\n", jet, i, y_ofs + last_y + 1, int64(wrapping.Top().d));
 					}
 				}
-				if (-1 == wrap_i) {
-					wrapping.Add({jet, i, y_ofs + last_y + 1});
-					//Cout() << Format("(seeding wrapping) piece, 0, jet, %5>d, i, %14>lld, tower, %14>lld\n", jet, i, y_ofs + last_y + 1);
+				// if wrapping period is known, fast-forward [i, y_ofs] toward (target_i-1)
+				if (0 < wrap_i && wrap_i < (target_i - 1 - i)) {
+					int64 advance_by = (target_i - 1 - i) / wrap_i;
+					i += advance_by * wrap_i;
+					y_ofs += advance_by * wrap_t;
 				}
-				if (0 == --events_to_print) {
-					Cout() << Format("wrap_i %lld, wrap_t %lld\n", wrap_i, wrap_t);
-					setup_wrapping = 0;
+				// clear chamber for next piece
+				for (int y = last_y + 1; y <= last_y + 4 + 3; ++y) chamber[y % CHAMBER_SIZE] = 0;
+				// move piece until it rests
+				int x = 2, y = last_y + 4;	ASSERT(piece_fits(piece, x, y));
+				while (0 <= y) {
+					// sideway jet
+					int dx = jets[jet] - '=';			// -1 for '<', +1 for '>'
+					if (++jet == jets.GetLength()) jet = 0;
+					if (piece_fits(piece, x + dx, y)) x += dx;
+					// downward
+					if (!piece_fits(piece, x, y - 1)) break;
+					--y;
 				}
+				// rest the piece and figure out new last_y
+				piece_fill(piece, x, y, last_y);
+				// wrap-around last_y to fit int, stay in [CHAMBER_SIZE..2xCHAMBER_SIZE) range
+				if (2 * CHAMBER_SIZE <= last_y) last_y -= CHAMBER_SIZE, y_ofs += CHAMBER_SIZE;
+				// next piece..
+				if (PIECES_N == ++piece) piece = 0;
 			}
-			if (!setup_wrapping && wrap_i < (target_i[target_i_i] - i)) {
-				int64 advance_by = (target_i[target_i_i] - i) / wrap_i;
-				i += advance_by * wrap_i;
-				y_ofs += advance_by * wrap_t;
-			}
-			// print height of tower for one of target_i
-			if (i == target_i[target_i_i]) {
-				Cout() << "i " << target_i[target_i_i] << ": " << y_ofs + last_y + 1 << EOL;
-				if (4 == ++target_i_i) Exit();
-			}
-			// clear chamber for next piece
-			for (int y = last_y + 1; y <= last_y + 4 + 3; ++y) clear_chamber(y);
-			// move piece until it rests
-			int x = 2, y = last_y + 4;	ASSERT(piece_fits(piece, x, y));
-			while (0 <= y) {
-				// sideway jet
-				int dx = jets[jet] - '=';			// -1 for '<', +1 for '>'
-				if (++jet == jets.GetLength()) jet = 0;
-				if (piece_fits(piece, x + dx, y)) x += dx;
-				// downward
-				if (!piece_fits(piece, x, y - 1)) break;
-				--y;
-			}
-			// rest the piece and figure out new last_y
-			piece_fill(piece, x, y, last_y);
-			// wrap-around last_y to fit int, stay in [CHAMBER_SIZE..2xCHAMBER_SIZE) range
-			if (2 * CHAMBER_SIZE <= last_y) last_y -= CHAMBER_SIZE, y_ofs += CHAMBER_SIZE;
-			// next piece..
-			if (PIECES_N == ++piece) piece = 0;
+			// print height of tower for each one of target_i
+			const char* target_name = TARGET_NAMES[(I_TARGETS[0] < i) + (I_TARGETS[2] < i)];
+			Cout() << Format("%s%14lld]: %14lld\n", target_name, i, y_ofs + last_y + 1);
 		}
-//		// debug print of chamber
-//		for (int y = chamber.GetCount(); y--; ) Cout() << "|" << chamber[y].begin() << "|" << EOL;
-//		Cout() << "+-------+" << EOL;
-		// print height of tower
-		Cout() << "part2: " << y_ofs + last_y + 1 << EOL;
 	}
 };
 
@@ -171,7 +161,6 @@ void lines_loop(T task, const String & filename) {
 	task.finish();
 }
 
-CONSOLE_APP_MAIN
-{
+CONSOLE_APP_MAIN {
 	for (const String & arg : CommandLine()) lines_loop(Part1(), arg);
 }
