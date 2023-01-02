@@ -7,45 +7,39 @@ class AocTask {	// expected answer sample: 13, 140, input: 6420, 22000
 	int p1_sum = 0, pairI = 0, p2_divider_2 = 1, p2_divider_6 = 2;
 	String left;
 
-	static const char* find_closing(const char* c, const char* cE) {
-		while (c < cE && ']' != *c) if ('[' == *c++) c = find_closing(c, cE) + 1;
-		return c;
-	}
-
-	static const char* skip_number(const char* c, const char* cE) {
-		while (c < cE && IsDigit(*c)) ++c;
-		return c;
-	}
-
-	static int compare(const char* l, const char* lE, const char* r, const char* rE) {
-		int cmp;
-		while (l < lE && r < rE) {		// compare two lists l->lE, r->rE stripped of []
-			if (',' == *l && ',' == *r) ++l, ++r;
-			else if ('[' == *l && '[' == *r) {
-				auto nlE = find_closing(++l, lE), nrE = find_closing(++r, rE);
-				if (0 != (cmp = compare(l, nlE, r, nrE))) return cmp;
-				l = nlE + 1, r = nrE + 1;
-			} else if ('[' == *l) {		// r is integer -> needs extra list-boxing
-				ASSERT(IsDigit(*r));
-				auto nlE = find_closing(++l, lE), nrE = skip_number(r, rE);
-				if (0 != (cmp = compare(l, nlE, r, nrE))) return cmp;
-				l = nlE + 1, r = nrE;
-			} else if ('[' == *r) {		// l is integer -> needs extra list-boxing
-				ASSERT(IsDigit(*l));
-				auto nlE = skip_number(l, lE), nrE = find_closing(++r, rE);
-				if (0 != (cmp = compare(l, nlE, r, nrE))) return cmp;
-				l = nlE, r = nrE + 1;
-			} else {
-				ASSERT(IsDigit(*l) && IsDigit(*r));
-				if (0 != (cmp = atoi(l) - atoi(r))) return cmp;
-				l = skip_number(l, lE), r = skip_number(r, rE);
+	// like-lexicographic type of code, quite tricky to write and debug, not recommended for
+	// "production" in real projects, but if you need every little bit of performance and can
+	// afford to cover this type of code with extensive unit tests and extra budget... :)
+	static int lex_compare(const char* l, const char* lE, const char* r, const char* rE) {
+		int li = 0, ri = 0, cmp;						// left/right integers boxed into fake list
+		while (l < lE && r < rE) {
+			if (',' == *l && ',' == *r) ++l, ++r;		// skip paired commas
+			while ('[' == *l && '[' == *r) ++l, ++r;	// open paired lists
+			if (IsDigit(*l) || IsDigit(*r)) {
+				while ('[' == *l) { ++ri, ++l; }		// box single integer into fake list
+				while ('[' == *r) { ++li, ++r; }
+				if (']' == *l || ']' == *r) return (']' == *r) - (']' == *l);	// shorter list at one side
+				ASSERT(IsDigit(*l) && IsDigit(*r));		// integer vs integer
+				auto a = l, b = r;						// remember start of integers
+				while (IsDigit(*l) && IsDigit(*r)) ++l, ++r;			// find end of one
+				if (0 != (cmp = IsDigit(*l) - IsDigit(*r))) return cmp;	// longer is bigger
+				while (a < l && *a == *b) ++a, ++b;		// same length, skip same digits
+				if (a < l) return *a - *b;				// some digit is different => result
 			}
+			while (li && ']' == *r) --li, ++r;			// pair boxed-integer-end vs real-list-end
+			while (ri && ']' == *l) --ri, ++l;
+			if (li || ri) return ri - li;				// other list is longer (didn't fully unbox)
+			while (']' == *l && ']' == *r) ++l, ++r;	// all these lists did match (both real ends)
+			if (']' == *l || '[' == *r) return -1;		// left list is smaller (open/close don't match)
+			if (']' == *r || '[' == *l) return +1;		// right list is smaller
+			ASSERT((l == lE && r == rE) || (',' == *l && ',' == *r));	// expected commas or end of strings
 		}
-		return (rE <= r) - (lE <= l);	// shorter list is less
+		ASSERT(l == lE && r == rE);
+		return 0;										// whole left did match whole right string
 	}
 
 	static bool less(const String & a, const String & b) {
-		return compare(a.Begin(), a.End(), b.Begin(), b.End()) < 0;
+		return lex_compare(a.Begin(), a.End(), b.Begin(), b.End()) < 0;
 	}
 
 public:
