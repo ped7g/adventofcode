@@ -2,91 +2,74 @@
 
 using namespace Upp;
 
-class Part1 {	// expected result: sample.txt: 24, 93, input.txt: 638, 31722
+class AoC2022Day14Task {	// expected result: sample.txt: 24, 93, input.txt: 638, 31722
 
-	constexpr static int X_OFS = -300, X_SZ = 2 * (500 + X_OFS), Y_SZ = 200;
-	Vector<Vector<uint8>> m { Y_SZ };
+	// X_OFS is tuned for known input data to keep the map size as small as possible (with small margin)
+	constexpr static int X_OFS = -300, POUR_X = 500 + X_OFS, POUR_Y = 0, X_SZ = 2 * POUR_X, Y_SZ = 200;
+	Vector<String> m { Y_SZ };
 	int minx = 1000, maxx = 0, miny = 1000, maxy = 0;
+
+	void fill(int x1, int y1, int x2 = -1, int y2 = -1) {
+		m[y1].Set(x1, '#');			// mark target [x,y]
+		if (-1 == x2) return;		// no previous coordinates, no line
+		int dx = sgn(x1 - x2), dy = sgn(y1 - y2);
+		while (x2 != x1 || y2 != y1) {
+			m[y2].Set(x2, '#');
+			x2 += dx, y2 += dy;
+		}
+	}
 
 public:
 
 	void init() {
 		for (auto & my : m) {
-			my.Reserve(X_SZ + 10);
-			my.Insert(0, '.', X_SZ);	// X_SZ x Y_SZ uint8 map
-			my.Add(10);
-			my.Add(0);
+			my.Cat('.', X_SZ + 2);	// X_SZ x Y_SZ char map filled with dots (plus "\n\0" for debug)
+			my.Set(X_SZ, 10);
+			my.Set(X_SZ + 1, 0);
 		}
-		Cout() << "part1";
+		Cout() << "***";
 	}
 
 	bool line(const String & line) {
 		const char* l = ~line;
-		int px = -1, py = -1;
-		do {
-			int x, y;
-			if (2 != sscanf(l, "%d,%d", &x, &y)) return true;
+		int px = -1, py = -1, x, y;
+		while (*l) {
+			if (!strncmp(" -> ", l, 4)) l += 4;	// skip " -> " ahead of next coordinates
+			if (2 != sscanf(l, "%d,%d", &x, &y)) return true;	// two coordinats expected
 			x += X_OFS;
-			minx = std::min(x, minx); maxx = std::max(x, maxx);
-			miny = std::min(y, miny); maxy = std::max(y, maxy);
-			m[y][x] = '#';
-			if (0 <= px) {
-				int dx = sgn(x - px), dy = sgn(y - py);
-				do {
-					m[py][px] = '#';
-					px += dx;
-					py += dy;
-				} while (px != x || py != y);
-			}
-			while (IsDigit(*l) || ',' == *l) ++l;
-			if (!*l) return false;
-			if (strncmp(" -> ", l, 4)) return true;
-			l += 4;
+			minx = std::min(x, minx), maxx = std::max(x, maxx);
+			miny = std::min(y, miny), maxy = std::max(y, maxy);
+			fill(x, y, px, py);
 			px = x, py = y;
-		} while(true);
-		return false;							// not finished yet, try next line
+			while (IsDigit(*l) || ',' == *l) ++l;				// advance over coordinates
+		}
+		return false;							// ready for next line
 	}
 
 	void finish() {
-		m[maxy + 2].Set(0, '#', X_SZ);
-		maxy += 4;
-		int sand_units = 0, x, y;
-		do {
-			x = 500 + X_OFS, y = 0;
-			if ('o' == m[y][x]) break;
-			while (y < maxy && ('o' != m[y][x])) {
+		fill(0, maxy + 2, X_SZ - 1, maxy + 2);	// bottom floor
+		int sand_units = 0, x, y, part1 = maxy;
+		while ('.' == m[POUR_Y][POUR_X]) {
+			x = POUR_X, y = POUR_Y;				// simulate fall from POUR [x,y]
+			while ('o' != m[y][x]) {			// until it lands
 				for (int dx : {0, -1, +1, 1000}) {
-					if (1000 == dx) {
-						m[y][x] = 'o';
+					if (1000 == dx) {			// can't move any more, land it
+						if (part1 <= y) part1 = sand_units;		// remember part1 result
+						m[y].Set(x, 'o');
 						++sand_units;
-						break;
-					}
-					if ('.' == m[y+1][x+dx]) {
+					} else if ('.' == m[y+1][x+dx]) {
 						++y;
 						x += dx;
 						break;
 					}
 				}
 			}
-		} while (y < maxy);
-
-		//for (int y = 0; y < maxy; ++y) { Cout() << (const char*)(&m[y][0]); }
-		Cout() << Format("x %d -> %d, y %d -> %d\n", minx, maxx, miny, maxy);
-		Cout() << "part1: " << sand_units << EOL;
+		}
+		//for (int y = 0; y < maxy + 3; ++y) Cout() << m[y];
+		Cout() << Format("inputs: x %d -> %d, y %d -> %d\n", minx - X_OFS, maxx - X_OFS, miny, maxy);
+		Cout() << "part1: " << part1 << EOL;
+		Cout() << "part2: " << sand_units << EOL;
 	}
-};
-
-class Part2 {
-
-public:
-
-	void init() { Cout() << "part2"; }
-
-	bool line(const String & line) {
-		return false;							// not finished yet, try next line
-	}
-
-	void finish() { Cout() << "part2: " << 0 << EOL; }
 };
 
 // concept of part1/part2 task having init/line(line)/finish interface
@@ -109,10 +92,6 @@ void lines_loop(T task, const String & filename) {
 	task.finish();
 }
 
-CONSOLE_APP_MAIN
-{
-	for (const String & arg : CommandLine()) {
-		lines_loop(Part1(), arg);
-		lines_loop(Part2(), arg);
-	}
+CONSOLE_APP_MAIN {
+	for (const String & arg : CommandLine()) lines_loop(AoC2022Day14Task(), arg);
 }
