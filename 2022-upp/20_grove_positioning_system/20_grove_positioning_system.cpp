@@ -33,7 +33,13 @@ struct AoC2022Day20Task {
 			new_at = (data[at].v + at) % mod;
 			if (new_at < 0) new_at += mod;				// figure out where it will move
 			ValueWithPosition temp = data[at];			// move it
-			data.Remove(at), data.Insert(new_at, temp);
+			if (at < new_at) {
+				memmove(data.Begin() + at, data.Begin() + at + 1, sizeof(ValueWithPosition) * (new_at - at));
+				data[new_at] = temp;
+			} else if (new_at < at) {
+				memmove(data.Begin() + new_at + 1, data.Begin() + new_at, sizeof(ValueWithPosition) * (at - new_at));
+				data[new_at] = temp;
+			}
 		}
 		if (DBG_OUT && sz < 40) Cout() << "mix out " << data.ToString() << EOL;
 	}
