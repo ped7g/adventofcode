@@ -10,8 +10,8 @@ struct Monkey : public Moveable<Monkey> {
 
 	template<int PART>
 	void Inspect(Vector<Monkey> & target_monkeys, const int64 worry_wear = 3) {
+		inspections += items.GetCount();
 		for (auto item : items) {
-			++inspections;
 			item *= op_mul < 0 ? item : op_mul;
 			item += op_add < 0 ? item : op_add;
 			// part 1 divides worry by three vs part 2 keeps modulo by product of all test_by
@@ -19,7 +19,7 @@ struct Monkey : public Moveable<Monkey> {
 			if (item % test_by) target_monkeys[test_false].items.Add(item);
 			else target_monkeys[test_true].items.Add(item);
 		}
-		items.Clear();
+		items.Trim(0);
 	}
 
 	Monkey() : inspections(0), op_mul(1), op_add(0) {}
