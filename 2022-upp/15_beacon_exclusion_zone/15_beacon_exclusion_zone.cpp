@@ -1,6 +1,7 @@
 #include <Core/Core.h>
 
-using namespace Upp;
+using namespace Upp; // expected answer: sample2.txt 6000000, [0,0] = 0,
+// sample.txt 26, [14,11] = 56000011, input.txt 5166077, [3267801,2703981] = 13071206703981
 
 struct Position : Moveable<Position> {
 	int x, y;
@@ -90,7 +91,7 @@ public:
 				spans.Reserve(input.GetCount());
 				beacons.Reserve(input.GetCount());
 				for (int ly = ls; ly < le; ++ly) {
-					spans.Clear(), beacons.Clear();
+					spans.Trim(0), beacons.Trim(0);
 					for (const auto & i : input) {
 						if (ly == i.b.y) beacons.FindAdd(i.b.x);	// track all unique beacons at ly
 						int line_power = i.b.manhattan_d(i.a) - abs(ly-i.a.y);	// sensor X-range at ly

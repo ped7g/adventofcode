@@ -57,7 +57,7 @@ public:
 			if (!words[1].Compare("cd")) {
 				// CD command, keep track of current directory (in parse_dir_ var)
 				if (!words[2].Compare("/")) {
-					parse_dir_.Clear();
+					parse_dir_.Trim(0);
 				} else if (!words[2].Compare("..")) {	// remove last directory from parse_dir_
 					int pd = parse_dir_.ReverseFind('/');	// find parent dir
 					if (pd >= 0) parse_dir_.TrimLast(parse_dir_.GetLength() - pd);

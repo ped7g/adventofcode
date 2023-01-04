@@ -38,7 +38,7 @@ public:
 
 	bool round(int first_dir) {
 		Index<Position> stands;
-		stands.Reserve(elves.GetCount()), moves.Clear(), proposals.Clear();
+		stands.Reserve(elves.GetCount()), moves.Trim(0), proposals.Trim(0);
 		int a[8], c, d;
 		// first half of round, each elf considers where they would like to move
 		for (auto & e : elves) {
