@@ -1,266 +1,134 @@
 #include <Core/Core.h>
 
-// expected answers: sample2.txt [28, 24], sample.txt [1651, 1707], input.txt [1857, 2536]
-
-//Myopian:  It takes 81284 steps with my aggressive pruning constant,
-// and the same answer with the more conservative pruning threshold, but does 1243846.
-
-// Part 2 paths:
-
-//New max: 1707 by
-//AA,DD,DD,EE,FF,GG,HH,HH,GG,FF,EE,EE :
-//AA,II,JJ,JJ,II,AA,BB,BB,CC,CC,DD
-//most pressure you can release: 1707
-
-//New max: 2536 by
-//AA,KF,HR,HR,AW,DW,DW,HY,IU,XO,XO,MO,VI,VI,MO,XO,IU,HY,DW,CB,MW,MW,RQ,FQ,FQ :
-//AA,OX,MA,MA,YC,II,II,RH,AS,AS,IR,BL,RU,RU,YZ,PM,PM,FR,KQ,KQ,FR,PM,YZ,RU
-//most pressure you can release: 2536
-
 using namespace Upp;
 
+// expected answers: sample2.txt [28, 24], sample.txt [1651, 1707], input.txt [1857, 2536]
+
+// version 2 - reworked algorithm to use dynamic programming
+// - does NOT provide the path directly, only pressure value (path *could* be reconstructed, but...)
+// - total time could be slightly limited by first figuring out how far from AA is each node
+//   and update the paths only for remaining 1,2,...,(time-distance_from_AA) minutes
+
+constexpr static int TOTAL_TIME_PART_1 = 30, TOTAL_TIME_PART_2 = 26;
+
+typedef Tuple<uint16, uint16> ValvesPressure;	// pair of opened valves and most pressure
+typedef VectorMap<uint16, uint16> ValvesPath;	// key: open valves bitmask, value: released pressure
+
+// convert name like "AA".."ZZ" into uint16 just by using the two chars as uint8 values
+static uint16 name2i(const char* name) {
+	ASSERT(('A' <= name[0] && name[0] <= 'Z') && ('A' <= name[1] && name[1] <= 'Z'));
+	return *reinterpret_cast<const uint16*>(name);
+}
+
 struct Node : Moveable<Node> {
-	int flow;
-	Vector<int16> tunnels;
-	String name;
+	uint16 name, flow, mask;		// name of node, possible flow of its valve, bit-mask of it
+	Vector<uint16> tunnels;			// node names during init, then indices into nodes vector
+	Vector<ValvesPath> paths_T;		// paths for remaining time: 1, 2, ... 30 minutes
 
-	Node() : flow(-1), name("xx") {}
-
-	static int16 name2i(const char* name) {
-		if ('x' == name[0]) return -1;
-		ASSERT('A' <= name[0] && name[0] <= 'Z' && 'A' <= name[1] && name[1] <= 'Z');
-		return (name[0] - 'A') + 26 * (name[1] - 'A');
+	Node(uint16 name, uint16 flow) : name(name), flow(flow), mask(0) {
+		tunnels.Reserve(20);
+		paths_T.AddN(TOTAL_TIME_PART_1);
 	}
 
-	String ToString() const {
-		return Format("\n%s(%d) = %d: %s", name, name2i(~name), flow, tunnels.ToString());
-	}
-};
-
-static Vector<Node> nodes;
-static int total_flow;
-
-struct Path : Moveable<Path> {
-	constexpr static int TOTAL_TIME = 30;
-
-	int released = 0, releasing = 0, could = 0, last_open = 0;
-	String p = "";
-
-	bool bigger(const Path & b) const {
-		if (b.released < released) return true;
-		if (released < b.released) return false;
-		return b.released + b.could < released + could;
+	// keep maximum pressure for particular open_valves type of path at time t
+	void update_max(int t, uint16 open_valves, uint16 pressure) {
+		int old_i = paths_T[t].FindAdd(open_valves, pressure);
+		if (paths_T[t][old_i] < pressure) paths_T[t][old_i] = pressure;
 	}
 
-	int16 node_i() const { return Node::name2i(~p + p.GetLength() - 2); }
-
-	bool is_on(const Node & n) const {
-		String name2x = n.name + "," + n.name;
-		return -1 != p.Find(name2x);
-	}
-
-	int time_remaining() const {
-		return TOTAL_TIME - (p.GetLength()/3);
-	}
-
-	Path grow(int16 ni, bool open_valve = false) const {
-		Path r = *this;
-		r.p += "," + nodes[ni].name;
-		if (open_valve) {
-			r.last_open = r.p.GetLength() - 2;
-			r.releasing += nodes[ni].flow;
-			r.released += nodes[ni].flow * r.time_remaining();
-			r.could = (total_flow - r.releasing) * (r.time_remaining() - 1);
-		} else {
-			if (last_open <= p.ReverseFind(nodes[ni].name)) r.could = 0;
-			else r.could = (total_flow - r.releasing) * (r.time_remaining() - 1);
+	// update possible-paths for remaining t minutes (assumes t-1 and less are already set)
+	void update(const Vector<Node> & nodes, int t) {
+		for (auto tunnel : tunnels) {	// consider possible paths from neighbours' T-1
+			const auto & n_t1 = nodes[tunnel].paths_T[t - 1];
+			// but keep only maximum pressure one per each combination of open valves
+			for (int i = n_t1.GetCount(); i--; ) update_max(t, n_t1.GetKey(i), n_t1[i]);
 		}
-		return r;
-	}
-};
-
-struct DualPath : Moveable<DualPath> {
-	constexpr static int TOTAL_TIME = 26;
-
-	int released = 0, releasing = 0, could[2] { 0, 0 }, last_open[2] { 0, 0 };
-	String p[2] { "", "" };
-
-	int get_could() const {
-		return std::max(could[0], could[1]);
-	}
-
-	bool bigger(const DualPath & b) const {
-		if (b.released < released) return true;
-		if (released < b.released) return false;
-		return b.released + b.could < released + could;
-	}
-
-	int16 node_i(int pi) const { return Node::name2i(~p[pi] + p[pi].GetLength() - 2); }
-
-	bool is_on(const Node & n) const {
-		String name2x = n.name + "," + n.name;
-		for (const auto & pp : p) if (-1 != pp.Find(name2x)) return true;
-		return false;
-	}
-
-	int time_remaining(int pi) const {
-		return TOTAL_TIME - (p[pi].GetLength()/3);
-	}
-
-	DualPath grow(int pi, int16 ni, bool open_valve = false) const {
-		DualPath r = *this;
-		r.p[pi] += "," + nodes[ni].name;
-		if (open_valve) {
-			r.last_open[pi] = r.p[pi].GetLength() - 2;
-			r.releasing += nodes[ni].flow;
-			r.released += nodes[ni].flow * r.time_remaining(pi);
-			r.could[pi] = (total_flow - r.releasing) * (r.time_remaining(pi) - 1);
-			r.could[1-pi] = (total_flow - r.releasing) * (r.time_remaining(1-pi) - 1);
-		} else {
-			if (last_open[pi] <= p[pi].ReverseFind(nodes[ni].name)) r.could[pi] = 0;
-			else r.could[pi] = (total_flow - r.releasing) * (r.time_remaining(pi) - 1);
+		if (0 == flow) return;			// this valve has no pressure -> no option to open it
+		ASSERT(mask);					// valve bit-mask to track open valves
+		update_max(t, mask, t * flow);	// new path: opening valve at time T and staying here
+		if (t < 2) return;				// T-2 paths doesn't exist yet, nothing else to add
+		for (auto tunnel : tunnels) {	// consider neighbour's T-2 paths after opening this valve
+			const auto & n_t2 = nodes[tunnel].paths_T[t - 2];
+			for (int i = n_t2.GetCount(); i--; ) {
+				const uint16 open_valves = n_t2.GetKey(i);
+				if (open_valves & mask) continue;	// this valve is already open in that T-2 path
+				update_max(t, open_valves | mask, n_t2[i] + t * flow);		// open new path
+			}
 		}
-		return r;
 	}
 };
 
-template<> struct StdGreater<Path> {
-	bool operator () (const Path& a, const Path& b) const { return a.bigger(b); }
-};
+class AoC2022Day16Task_v2 {
 
-template<> struct StdGreater<DualPath> {
-	bool operator () (const DualPath& a, const DualPath& b) const { return a.bigger(b); }
-};
-
-class Part1 {
-
-	char buf[3] { "xx" };
-
-	static String path2str(const Vector<int16> & p) {
-		String r = "[";
-		for (auto i : p) {
-			if (1 < r.GetLength()) r += ", ";
-			r += 'A' + (i%26);
-			r += 'A' + (i/26);
-		}
-		r += "]";
-		return r;
-	}
+	Vector<Node> nodes;
 
 public:
 
 	void init() {
 		Cout() << "***";
-		total_flow = 0;
-		nodes.Clear();
-		nodes.AddN(26*26);
+		nodes.Reserve(100);
 	}
 
 	bool line(const String & line) {
-		int flow;
-		if (3 != sscanf(~line, "Valve %c%c has flow rate=%d;", buf+0, buf+1, &flow)) return true;
-		int16 i = Node::name2i(buf);
-		Node & n = nodes[i];
-		n.flow = flow;
-		n.name.Set(buf, 2);
-		int tunnels_in = line.FindAfter("to valve");
-		ASSERT(-1 != tunnels_in);
-		tunnels_in += 1 + ('s' == line[tunnels_in]);	// skip "s " or " "
-		while (tunnels_in < line.GetLength()) {
-			n.tunnels.Add(Node::name2i(~line + tunnels_in));
-			tunnels_in += 4;
-		}
-		total_flow += flow;
-		return false;							// not finished yet, try next line
-	}
-
-	void part1() {
-		int most_pressure = 0;
-		SortedIndex<Path, StdGreater<Path>> paths;
-		SortedIndex<Path, StdGreater<Path>> solutions;
-		Path starting_path;
-		starting_path.p = "AA";
-		starting_path.could = total_flow * (Path::TOTAL_TIME - 1);
-		paths.Add(starting_path);
-
-		while (paths.GetCount()) {
-			ASSERT(paths[0].could);
-			Path p0 = paths[0];
-			paths.Remove(0);
-			int ni = p0.node_i();
-			const Node & n = nodes[ni];
-			if (0 < n.flow && !p0.is_on(n)) {
-				Path np = p0.grow(ni, true);
-				if (most_pressure < np.released + np.could) {
-					if (np.could) paths.Add(np);
-					else solutions.Add(np);
-					if (most_pressure < np.released) {
-						most_pressure = np.released;
-						Cout() << "- new max: " << most_pressure << " by\n  " << np.p << EOL;
-					}
-				}
-				if (0 == np.could) continue;	// this was last valve to open
-			}
-			for (auto ti : n.tunnels) {
-				Path np = p0.grow(ti);
-				if (most_pressure < np.released + np.could) paths.Add(np);
-			}
-		}
-		ASSERT(!solutions.IsEmpty());
-
-		Cout() << "*** part 1 * most pressure you can release: " << most_pressure << EOL;
-	}
-
-	void part2() {
-		int most_pressure = 0;
-		SortedIndex<DualPath, StdGreater<DualPath>> paths;
-		SortedIndex<DualPath, StdGreater<DualPath>> solutions;
-		DualPath starting_path;
-		starting_path.p[0] = "AA";
-		starting_path.p[1] = "AA";
-		starting_path.could[0] = starting_path.could[1] = total_flow * (DualPath::TOTAL_TIME - 1);
-		paths.Add(starting_path);
-
-		while (paths.GetCount()) {
-			ASSERT(paths[0].could);
-			DualPath p0 = paths[0];
-			paths.Remove(0);
-			int pi = p0.time_remaining(0) < p0.time_remaining(1);	// alter 0/1 (elephant/you)
-			int ni = p0.node_i(pi);
-			const Node & n = nodes[ni];
-			if (0 < n.flow && !p0.is_on(n)) {
-				DualPath np = p0.grow(pi, ni, true);
-				if (most_pressure < np.released + np.get_could()) {
-					if (np.get_could()) paths.Add(np);
-					else solutions.Add(np);
-					if (most_pressure < np.released) {
-						most_pressure = np.released;
-						Cout() << "- new max: " << most_pressure << " by\n  " << np.p[0] << " :\n  " << np.p[1] << EOL;
-					}
-				}
-				if (0 == np.get_could()) continue;	// this was last valve to open
-			}
-			if (0 == pi) {
-				for (auto ti : n.tunnels) {
-					DualPath np = p0.grow(pi, ti);
-					if (most_pressure < np.released + np.could[pi]) paths.Add(np);
-				}
-			} else {
-				for (auto ti : ReverseRange(n.tunnels)) {
-					DualPath np = p0.grow(pi, ti);
-					if (most_pressure < np.released + np.could[pi]) paths.Add(np);
-				}
-			}
-		}
-		ASSERT(!solutions.IsEmpty());
-
-		Cout() << "*** part 2 * most pressure you can release: " << most_pressure << EOL;
+		if (line.GetLength() < 50) return true;			// shorter than shortest valid
+		uint16 name = name2i(~line + 6), flow = atoi(~line + 23);
+		auto & n = nodes.Add({ name, flow });
+		const char* tunnels_in = ~line + 1 + line.FindAfter("to valve");	// +1 for trailing space
+		if (' ' == *tunnels_in) ++tunnels_in;			// "valves" with "s" needs extra +1
+		ASSERT(48 <= tunnels_in - ~line);
+		for (; tunnels_in < line.End(); tunnels_in += 4) n.tunnels.Add(name2i(tunnels_in));
+		return false;
 	}
 
 	void finish() {
-		Cout() << "- maximum possible flow " << total_flow << EOL;
-		part1();
-		part2();
+		// sort nodes by flow in descending order
+		Sort(nodes, [](const Node & a, const Node & b) -> bool { return b.flow < a.flow; });
+		// translate names in node.tunnels to indices into sorted array
+		uint8 node_name2i[('Z'<<8) + 'Z' + 1];			// sparse initialised array name -> index
+		for (int i = 0; i < nodes.GetCount(); ++i) {
+			ASSERT(i < 16 || 0 == nodes[i].flow);		// make sure uint16 is enough for bitmask
+			node_name2i[ nodes[i].name ] = i;
+			if (nodes[i].flow) nodes[i].mask = 1 << i;	// init bit-mask of valves with flow
+		}
+		for (auto & n : nodes) for (auto & t : n.tunnels) t = node_name2i[t];	// translate tunnels data
+		const int node_aa_i = node_name2i[0x4141];		// nodes index of "AA" (0x4141 as 'A' is 0x41)
+		// evaluate most-pressure paths for T=1,2,...,TOTAL_TIME
+		for (int t = 1; t < TOTAL_TIME_PART_1; ++t)		// t = 0 makes no difference (to open valve is too late)
+			for (auto & n : nodes)						// update all possible paths (with different valves open)
+				n.update(nodes, t);						// for remaining minutes 2,3,4,...
+		// part1: find path with maximum possible flow from AA for T = TOTAL_TIME_PART_1
+		const auto & aa_paths_p1 = nodes[node_aa_i].paths_T[TOTAL_TIME_PART_1 - 1];
+		uint16 most_pressure = aa_paths_p1.IsEmpty() ? 0 : *std::max_element(aa_paths_p1.Begin(), aa_paths_p1.End());
+		Cout() << "*** part 1 * most pressure you can release: " << most_pressure << EOL;
+		// part2: find pair of paths with maximum possible flow from AA for T = TOTAL_TIME_PART_2
+		auto & aa_paths_p2 = nodes[node_aa_i].paths_T[TOTAL_TIME_PART_2 - 1];
+		Vector<ValvesPressure> p2;						// copy all paths into vector as [valves, pressure] pairs
+		p2.Reserve(aa_paths_p2.GetCount());				// to sort them in descending order by pressure
+		for (int i = 0; i < aa_paths_p2.GetCount(); ++i) p2.Add({ aa_paths_p2.GetKey(i), aa_paths_p2[i] });
+		// sort paths by most pressure (descending order)
+		Sort(p2, [](const ValvesPressure & left, const ValvesPressure & right) { return right.b < left.b; } );
+		// find most-pressure pair of paths from AA at T=26 (each path opening different valves)
+		most_pressure = 0;
+		int dualpath_1_i = -1, dualpath_2_i, max_j = p2.GetCount();
+		for (int i = 0; i < max_j; ++i) {				// try new "left" path of pair
+			for (int j = i + 1; j < max_j; ++j) {
+				if (p2[i].a & p2[j].a) continue;		// same valve(s) open, can't pair
+				max_j = j;								// this is new search limit in *any* case
+				if (p2[i].b + p2[j].b <= most_pressure) break;	// less pressure with this "left"
+				most_pressure = p2[i].b + p2[j].b;		// new max pressure found, remember it
+				dualpath_1_i = i;						// "left" = i
+				dualpath_2_i = j;						// "right" = j
+			}
+		}
+		// if there can't be any pair of paths, deliver at least single path with most pressure (or none)
+		if (-1 == dualpath_1_i) most_pressure = p2.IsEmpty() ? 0 : p2[0].b;
+		Cout() << "*** part 2 * most pressure you can release: " << most_pressure << EOL;
+		if (0 <= dualpath_1_i) {
+			Cout() << Format(" Paths as (valves, pressure): (0x%04X, %5d) with (0x%04X, %5d) does (0x%04X, %5d)\n",
+				p2[dualpath_1_i].a, p2[dualpath_1_i].b, p2[dualpath_2_i].a, p2[dualpath_2_i].b, p2[dualpath_1_i].a | p2[dualpath_2_i].a, most_pressure);
+		} else {
+			Cout() << " Pair of paths not found, one or no path used." << EOL;
+		}
 	}
 };
 
@@ -285,5 +153,5 @@ void lines_loop(T task, const String & filename) {
 }
 
 CONSOLE_APP_MAIN {
-	for (const String & arg : CommandLine()) lines_loop(Part1(), arg);
+	for (const String & arg : CommandLine()) lines_loop(AoC2022Day16Task_v2(), arg);
 }
