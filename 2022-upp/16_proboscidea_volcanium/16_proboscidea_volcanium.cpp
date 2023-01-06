@@ -4,12 +4,11 @@ using namespace Upp;
 
 // expected answers: sample2.txt [28, 24], sample.txt [1651, 1707], input.txt [1857, 2536]
 
-// version 2 - reworked algorithm to use dynamic programming
-// - does NOT provide the path directly, only pressure value (path *could* be reconstructed, but...)
-// - total time could be slightly limited by first figuring out how far from AA is each node
-//   and update the paths only for remaining 1,2,...,(time-distance_from_AA) minutes
+// version 2 - reworked algorithm to use dynamic programming, use --path to also print full path
 
 constexpr static int TOTAL_TIME_PART_1 = 30, TOTAL_TIME_PART_2 = 26;
+
+static bool output_path = false;				// CLI option --path flag
 
 typedef Tuple<uint16, uint16> ValvesPressure;	// pair of opened valves and most pressure
 typedef VectorMap<uint16, uint16> ValvesPath;	// key: open valves bitmask, value: released pressure
@@ -22,10 +21,11 @@ static uint16 name2i(const char* name) {
 
 struct Node : Moveable<Node> {
 	uint16 name, flow, mask;		// name of node, possible flow of its valve, bit-mask of it
+	uint16 aa_dist;					// shortest distance from AA node
 	Vector<uint16> tunnels;			// node names during init, then indices into nodes vector
 	Vector<ValvesPath> paths_T;		// paths for remaining time: 1, 2, ... 30 minutes
 
-	Node(uint16 name, uint16 flow) : name(name), flow(flow), mask(0) {
+	Node(uint16 name, uint16 flow) : name(name), flow(flow), mask(0), aa_dist(~0) {
 		tunnels.Reserve(20);
 		paths_T.AddN(TOTAL_TIME_PART_1);
 	}
@@ -38,6 +38,7 @@ struct Node : Moveable<Node> {
 
 	// update possible-paths for remaining t minutes (assumes t-1 and less are already set)
 	void update(const Vector<Node> & nodes, int t) {
+		if (TOTAL_TIME_PART_1 - aa_dist <= t) return;	// too far + late from AA, stop updating
 		for (auto tunnel : tunnels) {	// consider possible paths from neighbours' T-1
 			const auto & n_t1 = nodes[tunnel].paths_T[t - 1];
 			// but keep only maximum pressure one per each combination of open valves
@@ -61,6 +62,31 @@ struct Node : Moveable<Node> {
 class AoC2022Day16Task_v2 {
 
 	Vector<Node> nodes;
+
+	void print_path(int t, uint16 ni, uint16 pressure, uint16 avoid_valves = 0) {
+		Cout() << " :> AA";	ASSERT(0x4141 == nodes[ni].name);	// reconstruct and print path
+		while (pressure) {										// until full path is reconstructed
+			if (--t <= 0) { Cout() << " ???" << EOL; return; }	// should not happen
+			const auto & n = nodes[ni];
+			int pi = -1;
+			for (const uint16 ti : n.tunnels) {		// check if the next node is simple move to neighbor
+				const auto & p = nodes[ti].paths_T[t - 1];
+				for (pi = p.GetCount(); 0 <= --pi && (avoid_valves & p.GetKey(pi) || pressure != p[pi]); ) ;
+				if (0 <= pi) {						// simple move found (mask is ok, same pressure, T-1)
+					ni = ti;
+					Cout() << Format(" -> %c%c", nodes[ni].name & 0xFF, nodes[ni].name >> 8);
+					break;
+				}
+			}
+			if (0 <= pi) continue;
+			// simple move not found, try to reconstruct valve opening
+			ASSERT((0 == (avoid_valves & n.mask)) && (n.flow * t <= pressure));
+			Cout() << " + (*)";
+			avoid_valves ^= n.mask;
+			pressure -= n.flow * t;
+		}
+		Cout() << EOL;
+	}
 
 public:
 
@@ -91,7 +117,18 @@ public:
 			if (nodes[i].flow) nodes[i].mask = 1 << i;	// init bit-mask of valves with flow
 		}
 		for (auto & n : nodes) for (auto & t : n.tunnels) t = node_name2i[t];	// translate tunnels data
-		const int node_aa_i = node_name2i[0x4141];		// nodes index of "AA" (0x4141 as 'A' is 0x41)
+		const uint16 node_aa_i = node_name2i[0x4141];	// nodes index of "AA" (0x4141 as 'A' is 0x41)
+		// calculate shortest distance to AA node from each node (for early-exit-pruning of update)
+		nodes[node_aa_i].aa_dist = 0;
+		BiVector<uint16> dist_aa_queue { node_aa_i };
+		while (!dist_aa_queue.IsEmpty()) {				// until all reachable nodes were updated
+			const auto & n = nodes[dist_aa_queue.PopHead()];
+			for (const uint16 t_i : n.tunnels) {
+				if (nodes[t_i].aa_dist <= n.aa_dist + 1) continue;	// already reached earlier
+				nodes[t_i].aa_dist = n.aa_dist + 1;		// set shortest distance to AA
+				dist_aa_queue.AddTail(t_i);				// use it to spread further
+			}
+		}
 		// evaluate most-pressure paths for T=1,2,...,TOTAL_TIME
 		for (int t = 1; t < TOTAL_TIME_PART_1; ++t)		// t = 0 makes no difference (to open valve is too late)
 			for (auto & n : nodes)						// update all possible paths (with different valves open)
@@ -99,7 +136,8 @@ public:
 		// part1: find path with maximum possible flow from AA for T = TOTAL_TIME_PART_1
 		const auto & aa_paths_p1 = nodes[node_aa_i].paths_T[TOTAL_TIME_PART_1 - 1];
 		uint16 most_pressure = aa_paths_p1.IsEmpty() ? 0 : *std::max_element(aa_paths_p1.Begin(), aa_paths_p1.End());
-		Cout() << "*** part 1 * most pressure you can release: " << most_pressure << EOL;
+		Cout() << "* part 1 * most pressure you can release: " << most_pressure << EOL;
+		if (output_path) print_path(TOTAL_TIME_PART_1, node_aa_i, most_pressure);
 		// part2: find pair of paths with maximum possible flow from AA for T = TOTAL_TIME_PART_2
 		auto & aa_paths_p2 = nodes[node_aa_i].paths_T[TOTAL_TIME_PART_2 - 1];
 		Vector<ValvesPressure> p2;						// copy all paths into vector as [valves, pressure] pairs
@@ -122,12 +160,16 @@ public:
 		}
 		// if there can't be any pair of paths, deliver at least single path with most pressure (or none)
 		if (-1 == dualpath_1_i) most_pressure = p2.IsEmpty() ? 0 : p2[0].b;
-		Cout() << "*** part 2 * most pressure you can release: " << most_pressure << EOL;
-		if (0 <= dualpath_1_i) {
-			Cout() << Format(" Paths as (valves, pressure): (0x%04X, %5d) with (0x%04X, %5d) does (0x%04X, %5d)\n",
-				p2[dualpath_1_i].a, p2[dualpath_1_i].b, p2[dualpath_2_i].a, p2[dualpath_2_i].b, p2[dualpath_1_i].a | p2[dualpath_2_i].a, most_pressure);
-		} else {
-			Cout() << " Pair of paths not found, one or no path used." << EOL;
+		Cout() << "* part 2 * most pressure you can release: " << most_pressure << EOL;
+		if (output_path) {
+			if (0 <= dualpath_1_i) {
+				Cout() << Format(" : Paths as (valves, pressure): (0x%04X, %5d) with (0x%04X, %5d) does (0x%04X, %5d)\n",
+					p2[dualpath_1_i].a, p2[dualpath_1_i].b, p2[dualpath_2_i].a, p2[dualpath_2_i].b, p2[dualpath_1_i].a | p2[dualpath_2_i].a, most_pressure);
+				print_path(TOTAL_TIME_PART_2, node_aa_i, p2[dualpath_1_i].b, ~p2[dualpath_1_i].a);
+				print_path(TOTAL_TIME_PART_2, node_aa_i, p2[dualpath_2_i].b, ~p2[dualpath_2_i].a);
+			} else {
+				Cout() << " : Pair of paths not found, one or no path used." << EOL;
+			}
 		}
 	}
 };
@@ -144,6 +186,7 @@ concept TaskProcessingLines = requires(T task, const String & line) {
 template <typename T>
 requires TaskProcessingLines<T>
 void lines_loop(T task, const String & filename) {
+	if ("--path" == filename) { output_path = true; return; }
 	FileIn in(FileExists(filename) ? filename : GetDataFile(filename)); // 2nd try exe-dir
 	if (!in) return;
 	task.init();
