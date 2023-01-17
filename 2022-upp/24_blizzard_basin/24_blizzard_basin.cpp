@@ -46,6 +46,20 @@ struct PathSearchData {
 				}
 			}
 		}
+		//DEBUG print out all maps
+		static bool DBG_print = true;
+		if (DBG_print) {
+			DBG_print = false;
+			for (uint16 t = 0; t < LCM; ++t) {
+				Cout() << EOL << "*** T = " << t << EOL;
+				for (int y = 0; y < N; ++y) {
+					for (int x = 0; x < M; ++x) {
+						Cout() << (m[t][y][x] ? '@' : '_');
+					}
+					Cout() << EOL;
+				}
+			}
+		}
 	}
 
 	// provided instance has to have "m" fields already initialised, but in pristine state (no costs yet)
@@ -88,7 +102,7 @@ struct PathSearchData {
 			}
 			// if still no cost assigned (unreachable or blizzard), try "later" entry
 			if (0 == m[from.t][from.y][from.x] || 0xFFFF == m[from.t][from.y][from.x]) {
-				++entry_wait;
+				if (LCM == entry_wait++) return -1;						// no path at all
 				if (LCM == ++from.t) from.t = 0;
 			}
 		}
@@ -106,6 +120,7 @@ public:
 	void init() { Cout() << "***"; }
 
 	bool line(const String & line) {
+		if (line.StartsWith(";",1)) return false;	//DEBUG comments in input.txt
 		if (-2 == N++) M = line.GetLength() - 2, entry = line.Find("#.#");	// first line
 		else if ((exit = line.Find("#.#")) < 0) input.Add(line.Mid(1, M));	// exit line or field line
 		return (0 <= exit);						// finished when exit is defined
