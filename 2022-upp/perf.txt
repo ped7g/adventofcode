@@ -4,31 +4,31 @@ echo 0 > /proc/sys/kernel/nmi_watchdog
 (second one should be restored after perf with `echo 1 > /proc/sys/kernel/nmi_watchdog`)
 
 as user:
-perf stat -B -r40 -e cycles:u -e instructions:u -e task-clock:u -e user_time ./13_distress_signal input.txt
+perf stat -B -r40 -e cycles:u -e instructions:u -e task-clock:u -e user_time ~/upp/.cache/upp.out/aoc-2022/CLANG20.Blitz.Shared/13_distress_signal input.txt
 
- Performance counter stats for './13_distress_signal input.txt' (40 runs):
+### day 13 U++ by Ped7g
 
-           2752609      cycles:u                         #    1.160 GHz                      ( +-  1.18% )
-           4473232      instructions:u                   #    1.52  insn per cycle           ( +-  0.00% )
-              2.95 msec task-clock:u                     #    1.034 CPUs utilized            ( +-  4.46% )
-           1804874 ns   user_time                        #  760.583 M/sec                    ( +-  2.47% )
+ Performance counter stats for '/home/ped/upp/.cache/upp.out/aoc-2022/CLANG20.Blitz.Shared/13_distress_signal input.txt' (40 runs):
 
-          0.002857 +- 0.000158 seconds time elapsed  ( +-  5.52% )
+           2009202      cycles:u                         #    0.881 GHz                      ( +-  0.72% )
+           3402803      instructions:u                   #    1.69  insn per cycle           ( +-  0.00% )
+              2.20 msec task-clock:u                     #    0.774 CPUs utilized            ( +-  2.67% )
+           1463174 ns   user_time                        #  641.908 M/sec                    ( +-  4.00% )
 
- Performance counter stats for './13_distress_signal input.txt' (40 runs):
+### day 13 C++ by Myopian (v2)
 
-           2751046      cycles:u                         #    0.843 GHz                      ( +-  0.46% )
-           4473049      instructions:u                   #    1.62  insn per cycle           ( +-  0.00% )
-              3.33 msec task-clock:u                     #    0.859 CPUs utilized            ( +-  1.50% )
-           1945975 ns   user_time                        #  596.508 M/sec                    ( +-  3.56% )
+ Performance counter stats for './myopian-aoc-day13':
 
-         0.0038734 +- 0.0000485 seconds time elapsed  ( +-  1.25% )
+           3332839      cycles:u                         #    0.976 GHz
+           6911454      instructions:u                   #    2.07  insn per cycle
+              3.42 msec task-clock:u                     #    0.789 CPUs utilized
+           4399000 ns   user_time                        #    1.288 G/sec
 
- Performance counter stats for './13_distress_signal input.txt' (40 runs):
+### day 13 C++ by Myopian (v1)
 
-           2945357      cycles:u                         #    1.287 GHz                      ( +-  1.11% )
-           4473334      instructions:u                   #    1.53  insn per cycle           ( +-  0.00% )
-              3.22 msec task-clock:u                     #    1.149 CPUs utilized            ( +-  4.36% )
-           2107225 ns   user_time                        #  920.636 M/sec                    ( +-  3.82% )
+ Performance counter stats for './myopian-aoc-day13-v1':
 
-          0.002802 +- 0.000157 seconds time elapsed  ( +-  5.61% )
+           5538379      cycles:u                         #    1.069 GHz
+          12099567      instructions:u                   #    2.18  insn per cycle
+              5.18 msec task-clock:u                     #    0.845 CPUs utilized
+           6202000 ns   user_time                        #    1.197 G/sec

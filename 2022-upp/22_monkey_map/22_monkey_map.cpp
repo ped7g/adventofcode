@@ -140,6 +140,18 @@ public:
 				--edges_to_link;
 			}
 		}
+		// DEBUG output of final layout
+		#ifdef flagDEBUG
+		for (int si = 0; si < 6; ++si) {
+			static const char* t2txt[4] = { "0°", "90°", "180°", "270°" };
+			Cout() << Format("side %d @ [%3d,%3d]: right %d @ %s, down %d @ %s, left %d @ %s, up %d @ %s\n",
+				si+1, sides[si].origin.x, sides[si].origin.y,
+				sides[si].next[0].s+1, t2txt[sides[si].next[0].t],
+				sides[si].next[1].s+1, t2txt[sides[si].next[1].t],
+				sides[si].next[2].s+1, t2txt[sides[si].next[2].t],
+				sides[si].next[3].s+1, t2txt[sides[si].next[3].t]);
+		}
+		#endif
 		// reset starting position and follow the path
 		p = {}, follow_path<2>();
 		// transform local side [x,y] into global board position
