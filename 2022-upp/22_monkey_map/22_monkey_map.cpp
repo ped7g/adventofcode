@@ -33,8 +33,8 @@ public:
 	bool line(const String & line) {
 		if (line.IsEmpty()) return false;
 		if (IsDigit(line[0])) path = line;					// this is path line
-		else board.Add(line), M = std::max(M, line.GetLength());
-		return IsDigit(line[0]);							// path line terminates input
+		else board.Add(line), M = max(M, line.GetLength());
+		return !path.IsEmpty();								// path line terminates input
 	}
 
 	template<int part> Position wrap(Position p) {			// wrap coordinates to next side
@@ -66,12 +66,12 @@ public:
 	}
 
 	template<int part> void follow_path() {
-		int li = 0, le = path.GetLength();
-		while (li < le) {
-			for (int r = atoi(~path + li); r-- && fwd<part>(); ) ;	// move until wall
-			while (++li < le && IsDigit(path[li])) ;				// skip input to turn-letter
-			p.d = (p.d - ('L' == path[li]) + ('R' == path[li])) & 3;// turn
-			++li;
+		const char* lb = path.Begin(), * le = path.End();
+		while (lb < le) {
+			for (int r = atoi(lb); r-- && fwd<part>(); ) ;	// move until wall
+			while (++lb < le && IsDigit(*lb)) ;				// skip input to turn-letter
+			p.d = (p.d - ('L' == *lb) + ('R' == *lb)) & 3;	// turn
+			++lb;
 		}
 	}
 
@@ -82,92 +82,63 @@ public:
 		Cout() << "part1: " << (1000 * (p.y+1) + 4 * (p.x+1) + p.d) << EOL;
 	}
 
-	void part2() {
-		// guess size of cube side plane based on collected board data
-		M = N = board.GetCount() <= 4 * 5 ? 4 : 50;	// layout could be at most 5 squares tall
-		// map the cube layout on the board data
-		/* THIS IS INCORRECT ALGORITHM, it's more tricky than fixed dx,dy -> fixed transformation
-		x = 0, y = 0, s = 0;
-		while (' ' == board[y][x]) x += N;			// skip empty sides until first side in board
-		while (s < 6) {
-			ASSERT(y < board.GetCount() && x < board[y].GetLength());
-			sides[s].b_x1 = x, sides[s].b_x2 = x + N - 1, sides[s].b_y1 = y, sides[s].b_y2 = y + N - 1;
-			for (int ps = 0; ps < s; ++ps) {			// adjust previous sides with info about new one
-				static const int transforms[4][7][4] = {
-					{	// y-3
-						{ D_R , ROTL, D_U , ROTR },		// x-3
-						{ D_U , ROTU, D_U , ROTU },		// x-2
-						{ D_L , ROTR, D_U , ROTL },		// x-1
-						{ D_D , SAME, D_U , SAME },		// x+0
-						{ D_R , ROTL, D_U , ROTR },		// x+1
-						{ D_U , ROTU, D_U , ROTU },		// x+2
-						{ D_L , ROTR, D_U , ROTL }		// x+3
-					},
-					{	// y-2
-						{ D_R , ROTU, D_R , ROTU },		// x-3
-						{ NONE, NONE, NONE, NONE },		// x-2
-						{ D_L , ROTU, D_L , ROTU },		// x-1
-						{ NONE, NONE, NONE, NONE },		// x+0
-						{ D_R , ROTU, D_R , ROTU },		// x+1
-						{ NONE, NONE, NONE, NONE },		// x+2
-						{ D_L , ROTU, D_L , ROTU }		// x+3
-					},
-					{	// y-1
-						{ D_R , ROTL, D_D , ROTR },		// x-3
-						{ D_D , ROTU, D_D , ROTU },		// x-2
-						{ D_L , ROTR, D_D , ROTL },		// x-1
-						{ D_U , SAME, D_D , SAME },		// x+0
-						{ D_R , ROTL, D_D , ROTR },		// x+1
-						{ D_D , ROTU, D_D , ROTU },		// x+2
-						{ D_L , ROTR, D_D , ROTL }		// x+3
-					},
-					{	// y-0, only left side is relevant, right side will be processed next)
-						{ D_R , SAME, D_L , SAME },		// x-3
-						{ NONE, NONE, NONE, NONE },		// x-2
-						{ D_L , SAME, D_R , SAME },		// x-1
-						{ NONE, NONE, NONE, NONE },		// x+0
-						{ NONE, NONE, NONE, NONE },		// x+1
-						{ NONE, NONE, NONE, NONE },		// x+2
-						{ NONE, NONE, NONE, NONE }		// x+3
-					},
-				};
-				for (int dy = -3; dy <= 0; ++dy) for (int dx = -3; dx <= +3; ++dx) {
-					auto & t = transforms[3+dy][3+dx];
-					if (NONE == t[0]) continue;	// opposite/same side
-					if (sides[ps].b_y1 == y + N * dy && sides[ps].b_x1 == x + N * dx) {
-						ASSERT(NONE == sides[s].next[t[0]].s && NONE == sides[ps].next[t[2]].s);
-						sides[s].next[t[0]] = { ps, t[1] };
-						sides[ps].next[t[2]] = { s, t[3] };
-					}
-				}
-			}
-			++s;
-			do x += N; while (x < board[y].GetLength() && ' ' == board[y][x]);
-			if (board[y].GetLength() <= x) x = 0, y += N;
+	void map_cube(int & side_n, const Position & p) {
+		ASSERT(' ' != board[p.y][p.x]);
+		auto & side = sides[side_n++];
+		side.origin = p;											// record new origin of side
+		// check neighbour sides
+		for (int d = 0; d < 4; ++d) {								// right, down, left, up
+			if (side.next[d].t != NONE) continue;					// already defined side
+			// derive position of neighbour side from current position
+			Position np { .x = p.x + move_delta[d][0] * M, .y = p.y + move_delta[d][1] * N, .s = side_n };
+			// check if new position is valid and contains non-empty side data
+			if (np.y < 0 || board.GetCount() <= np.y) continue;
+			if (np.x < 0 || board[np.y].GetLength() <= np.x) continue;
+			if (' ' == board[np.y][np.x]) continue;
+			// recursively map it as neighbour, link first, then recursion
+			side.next[d] = { .s = np.s, .t = SAME };				// goes out there
+			sides[np.s].next[d^2] = { .s = p.s, .t = SAME };		// comes from here
+			map_cube(side_n, np);
 		}
-		*/
-		// hard-coded layout for sample input and my input file
-		if (4 == N) {	// sample input
-			// ..0.
-			// 123.
-			// ..45
-			sides[0] = { {0 + 2*N, 0 + 0*N}, { {5,ROTU}, {3,SAME}, {2,ROTR}, {1,ROTU} } };
-			sides[1] = { {0 + 0*N, 0 + 1*N}, { {2,SAME}, {4,ROTU}, {5,ROTL}, {0,ROTU} } };
-			sides[2] = { {0 + 1*N, 0 + 1*N}, { {3,SAME}, {4,ROTR}, {1,SAME}, {0,ROTL} } };
-			sides[3] = { {0 + 2*N, 0 + 1*N}, { {5,ROTL}, {4,SAME}, {2,SAME}, {0,SAME} } };
-			sides[4] = { {0 + 2*N, 0 + 2*N}, { {5,SAME}, {1,ROTU}, {2,ROTL}, {3,SAME} } };
-			sides[5] = { {0 + 3*N, 0 + 2*N}, { {0,ROTU}, {1,ROTR}, {4,SAME}, {3,ROTR} } };
-		} else {
-			// .01.
-			// .2..
-			// 34..
-			// 5...
-			sides[0] = { {0 + 1*N, 0 + 0*N}, { {1,SAME}, {2,SAME}, {3,ROTU}, {5,ROTL} } };
-			sides[1] = { {0 + 2*N, 0 + 0*N}, { {4,ROTU}, {2,ROTL}, {0,SAME}, {5,SAME} } };
-			sides[2] = { {0 + 1*N, 0 + 1*N}, { {1,ROTR}, {4,SAME}, {3,ROTR}, {0,SAME} } };
-			sides[3] = { {0 + 0*N, 0 + 2*N}, { {4,SAME}, {5,SAME}, {0,ROTU}, {2,ROTL} } };
-			sides[4] = { {0 + 1*N, 0 + 2*N}, { {1,ROTU}, {5,ROTL}, {3,SAME}, {2,SAME} } };
-			sides[5] = { {0 + 0*N, 0 + 3*N}, { {4,ROTR}, {1,SAME}, {0,ROTR}, {3,SAME} } };
+	}
+
+	void part2() {
+		// calculate size of cube size from board data
+		int cube_area = 0;
+		// sides must be consecutive (only 11 distinct nets for cube are possible) => Trim = line area
+		for (const auto & line : board) cube_area += TrimBoth(line).GetLength();
+		int cube_side = sqrt(cube_area / 6);
+		M = N = cube_side;
+		// map the input board layout onto cube - first six sides with SAME transformation
+		cube_side = 0;												// sides mapped (counter)
+		Position side0p {};
+		while (' ' == board[side0p.y][side0p.x]) ++side0p.x;		// find top-left tile of side 0
+		map_cube(cube_side, side0p);								// recursively explore + map neighbours
+		ASSERT(6 == cube_side);										// also exactly five edges are defined
+		// map flat "unwrapped" input net onto cube by "folding" sides to define all edges
+		int edges_to_link = 12 - 5;									// 5 already defined, 12 is total
+		while (edges_to_link) {										// keep folding until done
+			if (6 <= ++cube_side) cube_side = 0;					// try to fold around next side
+			auto & side = sides[cube_side];
+			// look for corner with both sides defined and missing link between those two
+			for (int corner = 0; corner < 4; ++corner) {
+				int d1 = corner, d2 = (corner + 1) & 3;				// R+D, D+L, L+U, U+R
+				if (NONE == side.next[d1].t || NONE == side.next[d2].t) continue;
+				// first side turns right (+1) (+t transform), second turns left (-1)
+				int s1 = side.next[d1].s, s2 = side.next[d2].s;
+				int s1d = (d1 + side.next[d1].t + 1) & 3, s2d = (d2 + side.next[d2].t - 1) & 3;
+				// so R+D sides could define shared edge right_side.D <-> down_side.R
+				if (NONE != sides[s1].next[s1d].t) {				// shared edge defined already
+					ASSERT(s1 == sides[s2].next[s2d].s && s2 == sides[s1].next[s1d].s && NONE != sides[s2].next[s2d].t);
+					continue;
+				}
+				// "fold" each side to make them touch (to define the missing link)
+				// s1d and s2d are opposite directions to enter the link, so transform should
+				// convert s1d to opposite of s2d and s2d to opposite of s1d, ie. +2
+				sides[s1].next[s1d] = { .s = s2, .t = (s2d + 2 - s1d) & 3 };
+				sides[s2].next[s2d] = { .s = s1, .t = (s1d + 2 - s2d) & 3 };
+				--edges_to_link;
+			}
 		}
 		// reset starting position and follow the path
 		p = {}, follow_path<2>();
