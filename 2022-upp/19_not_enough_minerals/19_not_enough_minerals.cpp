@@ -29,7 +29,7 @@ struct RobotInfo : Moveable<RobotInfo> {
 
 struct Blueprint : Moveable<Blueprint> {
 	uint8 id;
-	Resources resources { .ore = 1 };
+	Resources resources;
 	RobotInfo robots[4];
 
 	Blueprint() {
@@ -54,7 +54,7 @@ class Aoc2022Day19Task {
 		upper_geodes += (time - 1) * time / 2;
 		if (upper_geodes <= max_geodes) return;
 		// simulate
-		if (--time) {
+		if (time--) {
 			// make all previously produced robots working, check costs (availability)
 			bool can_build[4];
 			for (int i = 0; i < 4; ++i) {
