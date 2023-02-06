@@ -19,11 +19,11 @@ static Resources operator * (const Resources & a, const uint8 k) {
 }
 
 struct RobotInfo : Moveable<RobotInfo> {
-	uint8 working = 0, produced = 0;
 	Resources cost, produces;
+	uint8 working = 0;
 
 	String ToString() const {
-		return Format(" - working %2>d %+d, cost %s, produces %s\n", working, produced - working, cost.ToString(), produces.ToFirstRes());
+		return Format(" - working %2>d, cost %s, produces %s\n", working, cost.ToString(), produces.ToFirstRes());
 	}
 };
 
@@ -33,7 +33,7 @@ struct Blueprint : Moveable<Blueprint> {
 	RobotInfo robots[4];
 
 	Blueprint() {
-		robots[0].working = robots[0].produced = 1;
+		robots[0].working = 1;
 		robots[0].produces.ore = 1;
 		robots[1].produces.clay = 1;
 		robots[2].produces.obsidian = 1;
@@ -50,33 +50,37 @@ class Aoc2022Day19Task {
 	void Simulate(Vector<Blueprint> & blueprints, int & max_geodes, int time) {
 		Blueprint bp = blueprints.Top();
 		// early exit test
-		short upper_geodes = bp.resources.geodes + bp.robots[3].produced * time;
+		short upper_geodes = bp.resources.geodes + bp.robots[3].working * time;
 		upper_geodes += (time - 1) * time / 2;
 		if (upper_geodes <= max_geodes) return;
 		// simulate
-		if (time--) {
-			// make all previously produced robots working, check costs (availability)
-			bool can_build[4];
-			for (int i = 0; i < 4; ++i) {
-				bp.robots[i].working = bp.robots[i].produced;
-				can_build[i] = bp.resources.covers(bp.robots[i].cost);
-			}
-			// collect resources with working robots
-			for (const auto & r : bp.robots) bp.resources += r.produces * r.working;
-			// try different simulation paths with building robots
-			for (int i = 4; i--; ) {		// and try with building one new robot
-				if (!can_build[i]) continue;
-				bp.resources -= bp.robots[i].cost, ++bp.robots[i].produced;
-				blueprints.Add(bp); Simulate(blueprints, max_geodes, time); blueprints.Pop();
-				bp.resources += bp.robots[i].cost, --bp.robots[i].produced;
-			}
-			// nothing built at all
-			blueprints.Add(bp); Simulate(blueprints, max_geodes, time); blueprints.Pop();
-		} else if (max_geodes < bp.resources.geodes) {
+		--time;
+		// check cost (availability) of robots
+		bool can_build[4];
+		bool can_build_all = true;
+		for (int i = 0; i < 4; ++i) {
+			can_build[i] = bp.resources.covers(bp.robots[i].cost);
+			can_build_all &= can_build[i];
+		}
+		// collect resources with working robots
+		for (const auto & r : bp.robots) bp.resources += r.produces * r.working;
+		// refresh max_geodes
+		if (max_geodes < bp.resources.geodes) {
 			max_geodes = bp.resources.geodes;
 //			Cout() << "** new max: " << max_geodes << ", state history:\n";
 //			for (int i = 0; i < blueprints.GetCount(); ++i ) Cout() << "* t " << i+1 << " " << blueprints[i];
 		}
+		if (0 == time) return;			// no more time to build anything
+		// try different simulation paths with building robots
+		for (int i = 4; i--; ) {		// and try with building one new robot
+			if (!can_build[i]) continue;
+			bp.resources -= bp.robots[i].cost, ++bp.robots[i].working;
+			blueprints.Add(bp); Simulate(blueprints, max_geodes, time); blueprints.Pop();
+			bp.resources += bp.robots[i].cost, --bp.robots[i].working;
+		}
+		if (can_build_all) return;		// no reason to just wait if all can be built
+		// nothing built at all
+		blueprints.Add(bp); Simulate(blueprints, max_geodes, time); blueprints.Pop();
 	}
 
 public:
