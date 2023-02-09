@@ -32,3 +32,188 @@ perf stat -B -r40 -e cycles:u -e instructions:u -e task-clock:u -e user_time ~/u
           12099567      instructions:u                   #    2.18  insn per cycle
               5.18 msec task-clock:u                     #    0.845 CPUs utilized
            6202000 ns   user_time                        #    1.197 G/sec
+
+### day 19
+
+-----------------------------------
+prune #4 - stop branch early when it can't mine enough geodes to beat current max_geodes
+
+$ time ~/upp/.cache/upp.out/aoc-2022/CLANG20.Blitz.Shared/19_not_enough_minerals sample.txt input.txt
+********** input filename: sample.txt
+*** 24 minutes max geodes: 9 -> quality level: 9
+*** 32 minutes max geodes: 56
+*** 24 minutes max geodes: 12 -> quality level: 24
+*** 32 minutes max geodes: 62
+******* part1: 33, part2: 3472
+********** input filename: input.txt
+*** 24 minutes max geodes: 7 -> quality level: 7
+*** 32 minutes max geodes: 57
+*** 24 minutes max geodes: 2 -> quality level: 4
+*** 32 minutes max geodes: 28
+*** 24 minutes max geodes: 0 -> quality level: 0
+*** 32 minutes max geodes: 10
+*** 24 minutes max geodes: 3 -> quality level: 12
+*** 24 minutes max geodes: 8 -> quality level: 40
+*** 24 minutes max geodes: 9 -> quality level: 54
+*** 24 minutes max geodes: 2 -> quality level: 14
+*** 24 minutes max geodes: 5 -> quality level: 40
+*** 24 minutes max geodes: 12 -> quality level: 108
+*** 24 minutes max geodes: 0 -> quality level: 0
+*** 24 minutes max geodes: 0 -> quality level: 0
+*** 24 minutes max geodes: 2 -> quality level: 24
+*** 24 minutes max geodes: 1 -> quality level: 13
+*** 24 minutes max geodes: 3 -> quality level: 42
+*** 24 minutes max geodes: 1 -> quality level: 15
+*** 24 minutes max geodes: 1 -> quality level: 16
+*** 24 minutes max geodes: 4 -> quality level: 68
+*** 24 minutes max geodes: 2 -> quality level: 36
+*** 24 minutes max geodes: 1 -> quality level: 19
+*** 24 minutes max geodes: 1 -> quality level: 20
+*** 24 minutes max geodes: 1 -> quality level: 21
+*** 24 minutes max geodes: 0 -> quality level: 0
+*** 24 minutes max geodes: 0 -> quality level: 0
+*** 24 minutes max geodes: 3 -> quality level: 72
+*** 24 minutes max geodes: 0 -> quality level: 0
+*** 24 minutes max geodes: 1 -> quality level: 26
+*** 24 minutes max geodes: 3 -> quality level: 81
+*** 24 minutes max geodes: 2 -> quality level: 56
+*** 24 minutes max geodes: 4 -> quality level: 116
+*** 24 minutes max geodes: 3 -> quality level: 90
+******* part1: 994, part2: 15960
+
+real    0m0.074s
+
+### all days run in one batch through `make time` - timings log:
+
+$ make time
+./time_all.bash
+
+# 01_calorie_counting
+real    0m0.004s
+user    0m0.000s
+sys     0m0.003s
+
+# 02_rock_paper_scissors
+real    0m0.003s
+user    0m0.003s
+sys     0m0.000s
+
+# 03_rucksack_reorganization
+real    0m0.004s
+user    0m0.004s
+sys     0m0.000s
+
+# 04_camp_cleanup
+real    0m0.004s
+user    0m0.000s
+sys     0m0.004s
+
+# 05_supply_stacks
+real    0m0.003s
+user    0m0.000s
+sys     0m0.003s
+
+# 06_tuning_trouble
+real    0m0.003s
+user    0m0.003s
+sys     0m0.000s
+
+# 07_no_space_left_on_device
+real    0m0.002s
+user    0m0.002s
+sys     0m0.000s
+
+# 08_treetop_tree_house
+real    0m0.004s
+user    0m0.004s
+sys     0m0.000s
+
+# 09_rope_bridge
+real    0m0.005s
+user    0m0.005s
+sys     0m0.000s
+
+# 10_cathode_ray_tube
+real    0m0.003s
+user    0m0.003s
+sys     0m0.000s
+
+# 11_monkey_in_middle
+real    0m0.021s
+user    0m0.021s
+sys     0m0.000s
+
+# 12_hill_climbing
+real    0m0.003s
+user    0m0.003s
+sys     0m0.000s
+
+# 13_distress_signal
+real    0m0.003s
+user    0m0.003s
+sys     0m0.000s
+
+# 14_regolith_reservoir
+real    0m0.005s
+user    0m0.005s
+sys     0m0.000s
+
+# 15_beacon_exclusion_zone
+real    0m0.099s
+user    0m1.112s
+sys     0m0.004s
+
+# 16_proboscidea_volcanium
+real    0m0.050s
+user    0m0.046s
+sys     0m0.004s
+
+# 17_pyroclastic_flow
+real    0m0.003s
+user    0m0.000s
+sys     0m0.003s
+
+# 18_boiling_boulders
+real    0m0.007s
+user    0m0.003s
+sys     0m0.004s
+
+# 19_not_enough_minerals
+real    0m0.019s
+user    0m0.015s
+sys     0m0.004s
+
+# 20_grove_positioning_system
+real    0m0.072s
+user    0m0.068s
+sys     0m0.004s
+
+# 21_monkey_math
+real    0m0.002s
+user    0m0.002s
+sys     0m0.000s
+
+# 22_monkey_map
+real    0m0.002s
+user    0m0.002s
+sys     0m0.000s
+
+# 23_unstable_diffusion
+real    0m0.205s
+user    0m0.205s
+sys     0m0.000s
+
+# 24_blizzard_basin
+real    0m0.016s
+user    0m0.012s
+sys     0m0.004s
+
+# 25_full_of_hot_air
+real    0m0.002s
+user    0m0.000s
+sys     0m0.002s
+
+real    0m0.578s
+user    0m1.542s
+sys     0m0.054s
+diff expected.log build/__out__.log

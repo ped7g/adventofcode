@@ -1,0 +1,267 @@
+
+# 01_calorie_counting
+
+input filename: 01_calorie_counting/input.txt
+max cal: 71502
+input filename: 01_calorie_counting/input.txt
+Top 3 sum cal: 208191
+
+# 02_rock_paper_scissors
+
+part1 input filename: 02_rock_paper_scissors/input.txt
+part1 total score: 15337
+part2 input filename: 02_rock_paper_scissors/input.txt
+part2 total score: 11696
+
+# 03_rucksack_reorganization
+
+part1 input filename: 03_rucksack_reorganization/input.txt
+part1: 7737
+part2 input filename: 03_rucksack_reorganization/input.txt
+part2: 2697
+
+# 04_camp_cleanup
+
+part1 input filename: 04_camp_cleanup/input.txt
+part1: 513
+part2 input filename: 04_camp_cleanup/input.txt
+part2: 878
+
+# 05_supply_stacks
+
+part1 input filename: 05_supply_stacks/input.txt
+stacks n = 9
+part1: [FCVRLMVQP]
+part2 input filename: 05_supply_stacks/input.txt
+stacks n = 9
+part2: [RWLWGJGFD]
+
+# 06_tuning_trouble
+
+part K = 4 input filename: 06_tuning_trouble/input.txt
+processed 1109 in line: mqllsjlslf... [pwmb]
+part K = 14 input filename: 06_tuning_trouble/input.txt
+processed 3965 in line: mqllsjlslf... [cvjsqlftnpdhwm]
+
+# 07_no_space_left_on_device
+
+parsing input filename: 07_no_space_left_on_device/input.txt
+/ = 43562874 to free: 3562874
+part1: 1886043
+part2: 3842121
+
+# 08_treetop_tree_house
+
+trees in input filename: 08_treetop_tree_house/input.txt
+processing 99 x 99 map
+part1: 1845
+part2: 230112
+
+# 09_rope_bridge
+
+*** input filename: 09_rope_bridge/input.txt
+part 1: knot 1 visited 11481 position(s)
+part 2: knot 9 visited 11473 position(s)
+
+# 10_cathode_ray_tube
+
+*** input filename: 10_cathode_ray_tube/input.txt
+####..##...##....##.####...##.####.#....
+...#.#..#.#..#....#....#....#.#....#....
+..#..#....#.......#...#.....#.###..#....
+.#...#.##.#.......#..#......#.#....#....
+#....#..#.#..#.#..#.#....#..#.#....#....
+####..###..##...##..####..##..#....####.
+
+part 1 signal strength sum: 14040
+
+
+# 11_monkey_in_middle
+
+*** input filename: 11_monkey_in_middle/input.txt
+part 1 state after round 20:
+Monkey 0 inspected items 208 times.
+Monkey 1 inspected items 108 times.
+Monkey 2 inspected items 60 times.
+Monkey 3 inspected items 103 times.
+Monkey 4 inspected items 255 times.
+Monkey 5 inspected items 202 times.
+Monkey 6 inspected items 266 times.
+Monkey 7 inspected items 179 times.
+Two most active monkeys: 6, 4, level of monkey business is 67830
+
+part 2 state after round 10000:
+Monkey 0 inspected items 120951 times.
+Monkey 1 inspected items 16092 times.
+Monkey 2 inspected items 6543 times.
+Monkey 3 inspected items 28995 times.
+Monkey 4 inspected items 126542 times.
+Monkey 5 inspected items 119627 times.
+Monkey 6 inspected items 120399 times.
+Monkey 7 inspected items 105570 times.
+Two most active monkeys: 4, 0, level of monkey business is 15305381442
+
+
+# 12_hill_climbing
+
+*** input filename: 12_hill_climbing/input.txt
+map 101x41 S[0, 20] E[77, 20]
+abcccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaccaaaaaaaaccccccccccccccccccccccccccccccccccccaaaaaa
+abcccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaccaaaaaaccccccccccccccccccccccccccccccccccccccaaaaa
+abcccccccccccccccccccccccccccccccccaaaaaaaacccaaaaccaaaaaaccccccccccccccccccccaaaccccccccccccccccaaaa
+abcccccccccccccccccccccccccccccccccccaaaaaaaccaaccccaaaaaaccccccccccccccccccccaaaccccccccccccccccaaaa
+abcccccccccccccccccccccccccccccaaacccaaaaaaaacccccccaaccaaccccccccccccccccccccaaaccccccccccccccccaaac
+abcccccccccccccccccccccccccccccaaaaaaaaacaaaacccccccccccccccaccaaccccccccccccciiaaccaaaccccccccccaacc
+abccccccccaaccccccccccccccccccaaaaaaaaaaccaaacccccccccccccccaaaaaccccccccacaiiiiijjaaaacccccccccccccc
+abacccaaccaacccccccccccccccccaaaaaaaaaaccccacccccaaaaccccccccaaaaacccccccaaiiiiijjjjaaaccccccaacccccc
+abacccaaaaaacccccccccccccccccaaaaaaaaccccccccccccaaaacccccccaaaaaacccccccaiiiioojjjjjacccaaaaaacccccc
+abcccccaaaaaaacccccccccccccccccaaaaaaccccaaccccccaaaacccccccaaaaccccccccciiinnoooojjjjcccaaaaaaaccccc
+abccccccaaaaaccccccccccccccccccaaaaaacccaaaaccccccaaacccccccccaaaccccccchiinnnooooojjjjcccaaaaaaacccc
+abcccccaaaaacccccccccccccccccccaacccccccaaaaccccccccccccccccccccccccccchhiinnnuuoooojjjjkcaaaaaaacccc
+abccccaaacaaccccccccccccccccccccccccccccaaaaccccccccccccccccccaaacccchhhhhnnntuuuoooojjkkkkaaaacccccc
+abccccccccaacccccccccccccccccccccccccccccccccccccccccccccccccccaacchhhhhhnnnnttuuuuoookkkkkkkaacccccc
+abcccccccccccccccccccaacaaccccccccccccccccccccccccccccccccccaacaahhhhhhnnnnntttxuuuoopppppkkkkacccccc
+abcccccccccccccccccccaaaaacccccccccaccccccccccccccccccccccccaaaaahhhhmnnnnntttxxxuuupppppppkkkccccccc
+abccccccccccccccccccccaaaaacccccaaaacccccccccccccccccccccccccaaaghhhmmmmttttttxxxxuuuuuupppkkkccccccc
+abcccccccccccccccccccaaaaaaaccccaaaaaaccccccccccccccccccccccccaagggmmmmtttttttxxxxuuuuuuvppkkkccccccc
+abcccccccccccccccccccaaaaaaaaaaacaaaaacccccccccccccccccccccccaaagggmmmttttxxxxxxxyyyyyvvvppkkkccccccc
+abccccccccccccccccccccaaaaaaaaaaaaaaaccccccccccccccccccccaacaaaagggmmmtttxxxxxxxyyyyyyvvppplllccccccc
+abcccccccccccccccccccaaaaaaaaaacaccaaccccccccccccccccccccaaaaaccgggmmmsssxxxxzzzzyyyyvvvpplllcccccccc
+abcccccccccccccccccccccaaaaaaccccccccccccccaacaaccccccccaaaaaccccgggmmmsssxxxxyyyyyvvvvqqplllcccccccc
+abccccccccccccccccccccccaaaaaacccccccccccccaaaacccccccccaaaaaacccgggmmmmsssswwyyyyyvvvqqqlllccccccccc
+abcccccccccccccccccccccaaaaaaaccccccccccccaaaaacccccccccccaaaaccccgggmmmmsswwyyyyyyyvvqqllllccccccccc
+abcccccccccccccccccccccaaaccaaacccccccccccaaaaaaccccccccccaccccccccgggooosswwwywwyyyvvqqlllcccccccccc
+abccccccccccccccccccccccacccccccccccccccccacaaaacccccccccccccccccccfffooosswwwwwwwwvvvqqqllcccccccccc
+abccccccccccccccccccccccccccccccccccccccccccaacccccccccccccccccccccfffooosswwwwwrwwvvvqqqllcccccccccc
+abccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccffooossswwwrrrwvvvqqqmmcccccccccc
+abccccaaacccccccccccccccccccccccccccccccccccccccccccccccccccccccccccffooosssrrrrrrrrqqqqmmmcccccccccc
+abccccaaacaacccccaaccccaaaacccccccccccccccccccccccccccccccccccccccccffooossrrrrrnrrrqqqqmmmcccaaacccc
+abcccccaaaaaccaaaaacccaaaaacccccccccccccccccccccccccccccccccccccccccfffoooorrnnnnnnmqqmmmmmcccaaacccc
+abccaaaaaaaacccaaaaaccaaaaaaccccccccccccccccccccccccccccccccccccccccfffooonnnnnnnnnmmmmmmmcccaaaccccc
+abcccaaaaacccccaaaaaccaaaaaaccccccaacccccccccccccccccccccccccccccccccfffoonnnnneddnmmmmmmccccaaaccccc
+abccccaaaaacccaaaaacccaaaaaacccccaaaaaaccccccccccccccccccccaaccccccccffeeeeeeeeeddddddddccccaaaaccccc
+abccccaacaaacccccaacccccaacccccccaaaaaaaccccccccccccccccaaaaaccccccccceeeeeeeeeedddddddddccaccaaccccc
+abccccaacccccccccccccccccccccccccaaaaaaaccaaaccccccccccccaaaaaccccccccceeeeeeeeaaaaddddddcccccccccccc
+abcccccccccccaaccccccccccccccccccccccaaaaaaaaacccccccccccaaaaacccccccccccccaaaacaaaacccccccccccccccaa
+abccccccccaacaaacccccccccccccccccccccaaaaaaaacccccccccccaaaaaccccccccccccccaaaccaaaaccccccccccccccaaa
+abccccccccaaaaacccccccccccccccccccccacaaaaaaccccccccccccccaaacccccccccccccccaccccaaacccccccccccacaaaa
+abcccccccccaaaaaaccccccccccccccccaaaaaaaaaaacccccccccccccccccccccccccccccccccccccccacccccccccccaaaaaa
+abcccccccaaaaaaaaccccccccccccccccaaaaaaaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccaaaaaa
+Reachable positions 3350 out of 4141
+part1: 361
+part2: 354
+
+# 13_distress_signal
+
+*** input filename: 13_distress_signal/input.txt
+part1 sum of indices: 6420
+part2 decoder key: 22000
+
+# 14_regolith_reservoir
+
+*** input filename: 14_regolith_reservoir/input.txt
+part1: 638
+part2: 31722
+
+# 15_beacon_exclusion_zone
+
+part1 input filename: 15_beacon_exclusion_zone/input.txt
+part1: 5166077
+part2 input filename: 15_beacon_exclusion_zone/input.txt
+part2 beacon can be at [3267801,2703981] = 13071206703981
+part2 finished (full scan)
+
+# 16_proboscidea_volcanium
+
+*** input filename: 16_proboscidea_volcanium/input.txt
+* part 1 * most pressure you can release: 1857
+* part 2 * most pressure you can release: 2536
+
+# 17_pyroclastic_flow
+
+*** input filename: 17_pyroclastic_flow/input.txt
+part1 [          2022]:           3227
+i     [         10000]:          15971
+ (wrap found:   +1750,           +2796)
+i     [       1000000]:        1597698
+part2 [ 1000000000000]:  1597714285698
+
+# 18_boiling_boulders
+
+boiling boulders input filename: 18_boiling_boulders/input.txt
+droplet cubes: 2117, full surface: 3500, outside surface: 2048
+
+# 19_not_enough_minerals
+
+********** input filename: 19_not_enough_minerals/input.txt
+ 1: 24 minutes max geodes: 7 -> quality level: 7
+    32 minutes max geodes: 57
+ 2: 24 minutes max geodes: 2 -> quality level: 4
+    32 minutes max geodes: 28
+ 3: 24 minutes max geodes: 0 -> quality level: 0
+    32 minutes max geodes: 10
+ 4: 24 minutes max geodes: 3 -> quality level: 12
+ 5: 24 minutes max geodes: 8 -> quality level: 40
+ 6: 24 minutes max geodes: 9 -> quality level: 54
+ 7: 24 minutes max geodes: 2 -> quality level: 14
+ 8: 24 minutes max geodes: 5 -> quality level: 40
+ 9: 24 minutes max geodes: 12 -> quality level: 108
+10: 24 minutes max geodes: 0 -> quality level: 0
+11: 24 minutes max geodes: 0 -> quality level: 0
+12: 24 minutes max geodes: 2 -> quality level: 24
+13: 24 minutes max geodes: 1 -> quality level: 13
+14: 24 minutes max geodes: 3 -> quality level: 42
+15: 24 minutes max geodes: 1 -> quality level: 15
+16: 24 minutes max geodes: 1 -> quality level: 16
+17: 24 minutes max geodes: 4 -> quality level: 68
+18: 24 minutes max geodes: 2 -> quality level: 36
+19: 24 minutes max geodes: 1 -> quality level: 19
+20: 24 minutes max geodes: 1 -> quality level: 20
+21: 24 minutes max geodes: 1 -> quality level: 21
+22: 24 minutes max geodes: 0 -> quality level: 0
+23: 24 minutes max geodes: 0 -> quality level: 0
+24: 24 minutes max geodes: 3 -> quality level: 72
+25: 24 minutes max geodes: 0 -> quality level: 0
+26: 24 minutes max geodes: 1 -> quality level: 26
+27: 24 minutes max geodes: 3 -> quality level: 81
+28: 24 minutes max geodes: 2 -> quality level: 56
+29: 24 minutes max geodes: 4 -> quality level: 116
+30: 24 minutes max geodes: 3 -> quality level: 90
+******* part1: 994, part2: 15960
+
+# 20_grove_positioning_system
+
+*** input filename: 20_grove_positioning_system/input.txt
+part1: [-483, 6451, 7554] = 13522
+part2: [6551959232169, 4219452006447, 6341757641542] = 17113168880158
+
+# 21_monkey_math
+
+*** input filename: 21_monkey_math/input.txt
+part1: root = 38731621732448
+part2: humn = 3848301405790
+
+# 22_monkey_map
+
+*** input filename: 22_monkey_map/input.txt
+part1: 27492
+part2: 78291
+
+# 23_unstable_diffusion
+
+*** input filename: 23_unstable_diffusion/input.txt
+part1: [-4,-4] -> [76,76] = 6561 tiles - 2527 elves = 4034 empty ground tiles
+part2: no move in round 960
+
+# 24_blizzard_basin
+
+*** input filename: 24_blizzard_basin/input.txt
+input: 120x25 (LCM 600) entry 0, exit 119
+blizzards l 642 r 682 u 666 d 699
+part1: shortest path is 301 minutes
+part2: shortest path is 301 + 269 + 289 = 859 minutes
+
+# 25_full_of_hot_air
+
+*** input filename: 25_full_of_hot_air/input.txt
+part1: 34182852926025 = "2-0-01==0-1=2212=100"
