@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	01_not_quite_lisp.cpp,
+	sample.txt,
+	input.txt,
+	01_not_quite_lisp.upp;
+
+mainconfig
+	"" = "";
+
