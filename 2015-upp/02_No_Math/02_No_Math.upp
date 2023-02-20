@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	02_No_Math.cpp,
+	sample.txt,
+	input.txt,
+	02_No_Math.upp;
+
+mainconfig
+	"" = "";
+
