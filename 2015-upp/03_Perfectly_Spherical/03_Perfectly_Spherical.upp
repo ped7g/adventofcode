@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	03_Perfectly_Spherical.cpp,
+	sample.txt,
+	input.txt,
+	03_Perfectly_Spherical.upp;
+
+mainconfig
+	"" = "";
+
