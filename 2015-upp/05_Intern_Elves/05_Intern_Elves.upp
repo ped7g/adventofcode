@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	05_Intern_Elves.cpp,
+	sample.txt,
+	input.txt,
+	05_Intern_Elves.upp;
+
+mainconfig
+	"" = "";
+
