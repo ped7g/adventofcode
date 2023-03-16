@@ -1,0 +1,14 @@
+description "MD5\377";
+
+uses
+	Core;
+
+file
+	04_Ideal_Stocking.cpp,
+	sample.txt,
+	input.txt,
+	04_Ideal_Stocking.upp;
+
+mainconfig
+	"" = "";
+
