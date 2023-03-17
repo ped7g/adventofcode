@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	06_Fire_Hazard.cpp,
+	sample.txt,
+	input.txt,
+	06_Fire_Hazard.upp;
+
+mainconfig
+	"" = "";
+
