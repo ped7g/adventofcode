@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	07_Assembly_Required.cpp,
+	sample.txt,
+	input.txt,
+	07_Assembly_Required.upp;
+
+mainconfig
+	"" = "";
+
