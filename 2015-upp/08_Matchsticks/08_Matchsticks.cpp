@@ -13,7 +13,7 @@ public:
 	bool line(const String & line) {
 		for (int i = 0; i < line.GetCount(); ++i) {		// part 1 counting
 			if ('\\' == line[i] && ('\\' == line[i+1] || '"' == line[i+1])) ++p1, ++i;
-			else if ('\\' == line[i] && 'x') p1 += 3, i += 3;
+			else if ('\\' == line[i] && 'x' == line[i+1]) p1 += 3, i += 3;
 			else if ('"' == line[i]) ++p1;
 		}
 		// part 2 counting (can't share `for` loop in P1 vs P2 easily, because P1 skipping...)
