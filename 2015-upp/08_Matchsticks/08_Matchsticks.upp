@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	08_Matchsticks.cpp,
+	sample.txt,
+	input.txt,
+	08_Matchsticks.upp;
+
+mainconfig
+	"" = "";
+
