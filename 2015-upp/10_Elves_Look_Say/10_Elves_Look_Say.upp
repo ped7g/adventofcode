@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	10_Elves_Look_Say.cpp,
+	sample.txt,
+	input.txt,
+	10_Elves_Look_Say.upp;
+
+mainconfig
+	"" = "";
+
