@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	13_Dinner_Table.cpp,
+	sample.txt,
+	input.txt,
+	13_Dinner_Table.upp;
+
+mainconfig
+	"" = "";
+
