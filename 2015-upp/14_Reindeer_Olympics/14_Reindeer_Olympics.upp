@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	14_Reindeer_Olympics.cpp,
+	sample.txt,
+	input.txt,
+	14_Reindeer_Olympics.upp;
+
+mainconfig
+	"" = "";
+
