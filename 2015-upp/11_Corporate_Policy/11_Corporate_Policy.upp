@@ -1,0 +1,10 @@
+uses
+	Core;
+
+file
+	11_Corporate_Policy.cpp,
+	11_Corporate_Policy.upp;
+
+mainconfig
+	"" = "";
+
