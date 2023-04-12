@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	09_Single_Night.cpp,
+	sample.txt,
+	input.txt,
+	09_Single_Night.upp;
+
+mainconfig
+	"" = "";
+
