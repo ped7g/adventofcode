@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	12_JSAbacus.cpp,
+	sample.txt,
+	input.txt,
+	12_JSAbacus.upp;
+
+mainconfig
+	"" = "";
+
