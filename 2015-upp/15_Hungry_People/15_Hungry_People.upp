@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	15_Hungry_People.cpp,
+	sample.txt,
+	input.txt,
+	15_Hungry_People.upp;
+
+mainconfig
+	"" = "";
+
