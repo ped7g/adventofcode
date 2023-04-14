@@ -1,0 +1,12 @@
+uses
+	Core;
+
+file
+	17_Too_Much.cpp,
+	sample.txt,
+	input.txt,
+	17_Too_Much.upp;
+
+mainconfig
+	"" = "";
+
