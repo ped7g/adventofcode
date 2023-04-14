@@ -1,0 +1,11 @@
+uses
+	Core;
+
+file
+	16_Aunt_Sue.cpp,
+	input.txt,
+	16_Aunt_Sue.upp;
+
+mainconfig
+	"" = "";
+
