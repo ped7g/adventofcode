@@ -1,0 +1,11 @@
+uses
+	Core;
+
+file
+	18_Gif_Yard.cpp,
+	input.txt,
+	18_Gif_Yard.upp;
+
+mainconfig
+	"" = "";
+
